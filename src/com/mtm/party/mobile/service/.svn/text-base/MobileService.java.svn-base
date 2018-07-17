@@ -1,0 +1,36 @@
+package com.mtm.party.mobile.service;
+
+import javax.annotation.Resource;
+
+import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import cn.mtm2000.common.hibernate.HibernateDao;
+
+/**
+ * 
+ * @author wangsong
+ *
+ */
+@Service
+@Transactional
+public class MobileService {
+
+	@Resource
+	private HibernateTemplate template;
+
+	public void setTemplate(HibernateTemplate template) {
+		this.template = template;
+	}
+	@Resource
+	private HibernateDao dao;
+
+	public HibernateDao getDao() {
+		return dao;
+	}
+
+	public void setDao(HibernateDao dao) {
+		this.dao = dao;
+	}
+}

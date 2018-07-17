@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-module
+  type="WEB"
+  name="party"
+  id="myeclipse.1500607308394"
+  context-root="/party"
+  j2ee-spec="5.0"
+  archive="party.war">
+  <attributes>
+    <attribute name="webrootdir" value="WebRoot" />
+  </attributes>
+</project-module>
+

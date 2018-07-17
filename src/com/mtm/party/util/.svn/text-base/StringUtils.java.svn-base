@@ -1,0 +1,17 @@
+package com.mtm.party.util;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class StringUtils {
+	public static   String   getDataString (Date date,String format){
+		
+		try {
+			SimpleDateFormat formatter = new SimpleDateFormat(format);//yyyyMMddHHmmss
+			return formatter.format(date);
+		} catch (Exception e) {			
+			e.printStackTrace();
+		}
+		return "";
+	}
+}

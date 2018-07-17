@@ -1,0 +1,1534 @@
+package com.mtm.party.mobile.ctrl;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.sql.Clob;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+import org.hibernate.Hibernate;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import cn.mtm2000.common.hibernate.PageData;
+import cn.mtm2000.common.util.DateUtil;
+import cn.mtm2000.common.util.ValidUtil;
+
+import com.google.gson.Gson;
+import com.mtm.party.feelings.model.Feelings;
+import com.mtm.party.feelings.model.FeelingsComment;
+import com.mtm.party.feelings.model.FeelingsCommentForm;
+import com.mtm.party.feelings.model.FeelingsView;
+import com.mtm.party.feelings.service.FeelingService;
+import com.mtm.party.feelings.service.PraiseService;
+import com.mtm.party.mobile.model.FeelingsMobileForm;
+import com.mtm.party.mobile.model.HttpHeaderInfoBean;
+import com.mtm.party.mobile.model.NoticeMobileForm;
+import com.mtm.party.mobile.service.MobileService;
+import com.mtm.party.mobile.util.HttpHeaderUtils;
+import com.mtm.party.pay.model.Order;
+import com.mtm.party.pay.model.PayRecord;
+import com.mtm.party.pay.model.Payment;
+import com.mtm.party.pay.model.WinXinConf;
+import com.mtm.party.pay.service.PayService;
+import com.mtm.party.repo.model.Repository;
+import com.mtm.party.repo.service.RepositoryService;
+import com.mtm.party.sys.model.Accessory;
+import com.mtm.party.sys.model.Notice;
+import com.mtm.party.sys.model.NoticeView;
+import com.mtm.party.sys.service.AccessoryService;
+import com.mtm.party.sys.service.NoticeService;
+import com.mtm.party.user.model.User;
+import com.mtm.party.user.service.UserService;
+import com.mtm.party.util.Formats;
+import com.mtm.party.util.HttpRequestor;
+import com.mtm.party.util.MessageUtil;
+import com.mtm.party.util.PayUtil;
+
+@Controller
+@RequestMapping("/mobile")
+public class MobileController {
+	private final String SAVE_USER = "SAVE_USER";// 用户注册
+	private final String GET_PAY = "GET_PAY";// 支付申请订单
+	private final String SAVE_PAY = "SAVE_PAY";// 保存缴费记录
+	private final String GET_PAY_RECORD = "GET_PAY_RECORD";// 获取缴费记录
+	private final String GET_OPENID = "GET_OPENID";// 支付申请订单
+	private final String LOGIN_IN = "LOGIN_IN";// 登录
+	private final String UNBUNDLING = "UNBUNDLING";// 解绑用户
+	private final String GET_NOTICE_LIST = "GET_NOTICE_LIST";// 获取公告、服务指南列表
+	private final String SAVE_NOTICE_VIEW = "SAVE_NOTICE_VIEW";// 保存已查看公告、服务指南
+	private final String GET_NOTICE = "GET_NOTICE";// 获取公告、服务指南
+	private final String GET_REPOSITORY_DETAIL = "GET_REPOSITORY_DETAIL";// 获取知识库详情
+	private final String GET_FEELING_DETAIL = "GET_FEELING_DETAIL";// 获取学习档案详情
+	private final String GET_REPOSITORY_LIST = "GET_REPOSITORY_LIST";// 获取知识库列表
+	private final String GET_FEELINGS_LIST = "GET_FEELINGS_LIST";// 获取心得（圈子）列表
+	private final String GET_MY_FEELINGS_LIST = "GET_MY_FEELINGS_LIST";// 获取我的心得列表
+	private final String SAVE_PRAISE = "SAVE_PRAISE";// 点赞或者保存评论信息
+	private final String SHOW_PRAISE_STATE = "SHOW_PRAISE_STATE";// 查看是否被点赞或者评论
+	private final String SAVE_FEELINGS_VIEW = "SAVE_FEELINGS_VIEW";// 知识库、心得查看记录存储
+	private final String SAVE_FEELINGS = "SAVE_FEELINGS";// 保存心得
+	private final String SAVE_REPOSITORY = "SAVE_REPOSITORY";// 保存知识库
+	private final String GET_MY_FEELINGS_COUNT = "GET_MY_FEELINGS_COUNT";// 获取点赞数、评论数、心得数
+
+	private JSONArray jsonArray = new JSONArray();
+
+	private MobileService mobileService;
+	@Resource
+	private UserService userService;
+	@Resource
+	private PayService payService;
+	@Resource
+	private NoticeService noticeService;
+	// 心得(学习档案)
+	@Resource
+	private FeelingService feelingService;
+	// 知识库
+	@Resource
+	private RepositoryService repositoryService;
+	// 附件
+	@Resource
+	private AccessoryService accessoryService;
+	// 赞
+	@Resource
+	private PraiseService praiseService;
+
+	public PraiseService getPraiseService() {
+		return praiseService;
+	}
+
+	public void setPraiseService(PraiseService praiseService) {
+		this.praiseService = praiseService;
+	}
+
+	public AccessoryService getAccessoryService() {
+		return accessoryService;
+	}
+
+	public void setAccessoryService(AccessoryService accessoryService) {
+		this.accessoryService = accessoryService;
+	}
+
+	public FeelingService getFeelingService() {
+		return feelingService;
+	}
+
+	public void setFeelingService(FeelingService feelingService) {
+		this.feelingService = feelingService;
+	}
+
+	public RepositoryService getRepositoryService() {
+		return repositoryService;
+	}
+
+	public void setRepositoryService(RepositoryService repositoryService) {
+		this.repositoryService = repositoryService;
+	}
+
+	public PayService getPayService() {
+		return payService;
+	}
+
+	public void setPayService(PayService payService) {
+		this.payService = payService;
+	}
+
+	public MobileService getMobileService() {
+		return mobileService;
+	}
+
+	public void setMobileService(MobileService mobileService) {
+		this.mobileService = mobileService;
+	}
+
+	public JSONArray getJsonArray() {
+		return jsonArray;
+	}
+
+	public void setJsonArray(JSONArray jsonArray) {
+		this.jsonArray = jsonArray;
+	}
+
+	public UserService getUserService() {
+		return userService;
+	}
+
+	public void setUserService(UserService userService) {
+		this.userService = userService;
+	}
+
+	/**
+	 * 接口方法总入口
+	 * 
+	 * @author wangsong
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("mobileIn")
+	public String mobileIn(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		response.setContentType("application/json; charset=UTF-8");
+//		request.setCharacterEncoding("application/json; charset=UTF-8");
+		HttpHeaderInfoBean headerInfoBean = HttpHeaderUtils
+				.getHeaderInfos(request);
+		if (ValidUtil.isEmpty(headerInfoBean.getMethod())) {
+			headerInfoBean = HttpHeaderUtils.getHeaderInfosTest(request);
+		}
+		String method = headerInfoBean.getMethod();
+		String json = "";
+		try {
+			request.setCharacterEncoding("UTF-8");
+			if (SAVE_USER.equals(method)) {
+				// 用户注册接口
+				json = saveUser(request, response);
+			} else if (GET_PAY.equals(method)) {
+				// 支付申请订单接口
+				json = getPay(request, response);
+			} else if (GET_OPENID.equals(method)) {
+				// 获取openiD接口
+				json = getOpenID(request, response);
+			} else if (LOGIN_IN.equals(method)) {
+				// 用户登录方法
+				json = loginin(request, response);
+			} else if (UNBUNDLING.equals(method)) {
+				json = unbundling(request, response);
+			} else if (SAVE_PAY.equals(method)) {
+				// 保存缴费记录
+				json = savePay(request, response);
+			} else if (GET_PAY_RECORD.equals(method)) {
+				// 查询缴费记录
+				json = getPayRecord(request, response);
+			} else if (GET_NOTICE_LIST.equals(method)) {
+				// 获取公告、服务指南列表
+				json = getNoticeList(request, response);
+			} else if (SAVE_NOTICE_VIEW.equals(method)) {
+				// 设置公告、服务指南已读
+				json = saveNoticeView(request, response);
+			} else if (GET_NOTICE.equals(method)) {
+				// 获取公告、服务指南
+				json = getNotice(request, response);
+			} else if (GET_REPOSITORY_DETAIL.equals(method)) {
+				// 获取知识库详情
+				json = getRepositoryDetail(request, response);
+			} else if (GET_FEELING_DETAIL.equals(method)) {
+				// 获取学习档案详情
+				json = getFeelingDetail(request, response);
+			} else if (GET_REPOSITORY_LIST.equals(method)) {
+				// 知识库列表
+				json = getRepositoryList(request, response);
+			} else if (GET_FEELINGS_LIST.equals(method)) {
+				// 心得（圈子）列表
+				json = getFeelingsList(request, response);
+			} else if (GET_MY_FEELINGS_LIST.equals(method)) {
+				// 我的心得列表
+				json = getMyFeelingsList(request, response);
+			} else if (SAVE_PRAISE.equals(method)) {
+				// 点赞或者保存评论
+				json = savePraiseOrComment(request, response);
+			} else if (SAVE_FEELINGS_VIEW.equals(method)) {
+				// 知识库、心得 查看记录存储
+				json = saveFeelingsView(request, response);
+			} else if (SHOW_PRAISE_STATE.equals(method)) {
+				// 查看是否被点赞或者评论
+				json = showPraiseOrComment(request, response);
+			} else if (SAVE_FEELINGS.equals(method)) {
+				// 保存心得
+				json = saveFeelings(request, response);
+			} else if (SAVE_REPOSITORY.equals(method)) {
+				// 保存知识库
+				json = saveRepository(request, response);
+			} else if (GET_MY_FEELINGS_COUNT.equals(method)) {
+				// 获取点赞数、评论数、心得数
+				json = getMyFeelingsCount(request, response);
+			}
+
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		try {
+			response.getWriter().write(json);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
+	 * 用户注册
+	 * 
+	 * @author wangsong
+	 * @return
+	 */
+	public String saveUser(HttpServletRequest request,
+			HttpServletResponse response) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		User u = new User();
+		String account = request.getParameter("account");// 用户名
+		String pwd = request.getParameter("password");// 密码
+		String name = request.getParameter("name");// 名字
+		String cardType = request.getParameter("cardType");// 证件类型
+		String idcard = request.getParameter("idCard");// 身份证号
+		String phone = request.getParameter("phone");// 手机号
+		String branchCode = request.getParameter("branchCode");// 所属党支部编码
+		String salary = request.getParameter("salary");// 月收入
+		String address = request.getParameter("address");// 住址
+		String joiningTime = request.getParameter("joiningTime");// 入党时间
+		String sponsor = request.getParameter("sponsor");// 入党介绍人
+		String openId = request.getParameter("openId");// 微信识别码
+		String rank = request.getParameter("rank");// 用户权限，级别
+		String startTime = request.getParameter("startTime");// 开始交党费日期
+		String endTime = request.getParameter("endTime");// 党费交至日期
+		// String updateTime=request.getParameter("account");//修改时间
+		// String deleteTime=request.getParameter("account");//删除时间
+		// Md5 md5 = new Md5(pwd);
+		// md5.processString();
+		// String password = md5.getStringDigest();
+		User user = userService.getUserByIdCardAndPhone(idcard, phone);
+		JSONObject JsonObject = new JSONObject();
+		try {
+			if (user == null) {
+				JsonObject.put("result", "用户不存在！");
+				JsonObject.put("success", "204");
+			} else {
+				if (ValidUtil.isNoEmpty(user.getOpenId())) {
+					JsonObject.put("result", "该用户已关联！");
+					JsonObject.put("success", "200");
+					JsonObject.put("user", user);
+				} else {
+					if (ValidUtil.isNoEmpty(account)) {
+						user.setAccount(account);
+					}
+					// if (ValidUtil.isNoEmpty(pwd)) {
+					// u.setPassword(password);
+					// }
+					if (ValidUtil.isNoEmpty(name)
+							&& !user.getName().equals(name)) {
+						user.setName(name);
+					}
+					if (ValidUtil.isNoEmpty(cardType)) {
+						user.setCardType(cardType);
+					}
+					if (ValidUtil.isNoEmpty(idcard)
+							&& !user.getIdcard().equals(idcard)) {
+						user.setIdcard(idcard);
+					}
+					if (ValidUtil.isNoEmpty(phone)
+							&& !user.getPhone().equals(phone)) {
+						user.setPhone(phone);
+					}
+					if (ValidUtil.isNoEmpty(branchCode)) {
+						user.setBranchCode(branchCode);
+					}
+					if (ValidUtil.isNoEmpty(salary)) {
+						user.setSalary(salary);
+					}
+					if (ValidUtil.isNoEmpty(address)) {
+						user.setAddress(address);
+					}
+					if (ValidUtil.isNoEmpty(joiningTime)) {
+						user.setJoiningTime(joiningTime);
+					}
+					if (ValidUtil.isNoEmpty(sponsor)) {
+						user.setSponsor(sponsor);
+					}
+					if (ValidUtil.isNoEmpty(openId)) {
+						user.setOpenId(openId);
+					}
+					if (ValidUtil.isNoEmpty(rank)) {
+						user.setRank(rank);
+					}
+					if (ValidUtil.isNoEmpty(startTime)) {
+						user.setStartTime(startTime);
+					}
+					if (ValidUtil.isNoEmpty(endTime)) {
+						user.setEndTime(endTime);
+					}
+					user.setCreateTime(DateUtil.getCurrentDatetime());
+					user.setIsDelete("0");
+					userService.updateUser(user);
+					JsonObject.put("result", "关联成功！");
+					JsonObject.put("success", "201");
+					JsonObject.put("user", user);
+				}
+			}
+		} catch (Exception e) {
+			JsonObject.put("result", "关联失败！");
+			JsonObject.put("success", "203");
+			e.printStackTrace();
+		}
+		return JsonObject.toString();
+	}
+
+	/**
+	 * 用户登录
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public String loginin(HttpServletRequest request,
+			HttpServletResponse response) {
+		String openId = request.getParameter("openId");
+		User user = userService.getUserByOpenId(openId);
+		JSONObject JsonObject = new JSONObject();
+		if (ValidUtil.isNoEmpty(user)) {
+			JsonObject.put("result", "该用户已关联！");
+			JsonObject.put("success", "200");
+			JsonObject.put("user", user);
+		} else {
+			JsonObject.put("result", "请关联用户！");
+			JsonObject.put("success", "202");
+		}
+		return JsonObject.toString();
+	}
+
+	/**
+	 * 解绑微信
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public String unbundling(HttpServletRequest request,
+			HttpServletResponse response) {
+		String idCard = request.getParameter("idCard");
+		JSONObject JsonObject = new JSONObject();
+		User user = userService.getUserByuserIdCard(idCard);
+		if (ValidUtil.isNoEmpty(user)) {
+			if (ValidUtil.isNoEmpty(user.getOpenId())) {
+				user.setOpenId("");
+				userService.updateUser(user);
+				JsonObject.put("result", "解绑成功！");
+				JsonObject.put("success", "300");
+			} else {
+				JsonObject.put("result", "请先关联用户！");
+				JsonObject.put("success", "301");
+			}
+		} else {
+			JsonObject.put("result", "身份证号码输入错误！");
+			JsonObject.put("success", "302");
+		}
+		return JsonObject.toString();
+	}
+
+	/**
+	 * 获取支付信息
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public String getPay(HttpServletRequest request,
+			HttpServletResponse response) {
+		response.setContentType("application/json; charset=UTF-8");
+		JSONObject JsonObject = new JSONObject();
+		try {
+			String userId = request.getParameter("userId");
+			User user = userService.getUserById(userId);
+			if (user == null) {
+				JsonObject.put("message", "用户不存在！");
+				JsonObject.put("flag", false);
+				return JsonObject.toString();
+			} else if (user.getOpenId() == null || "".equals(user.getOpenId())) {
+				JsonObject.put("message", "用户为认证！");
+				JsonObject.put("flag", false);
+				return JsonObject.toString();
+			}
+			// 根据User获取微信配置信息
+
+			WinXinConf winXinConf = payService.getWinXinConfByCode(user
+					.getBranchCode());
+			if (winXinConf == null) {
+				JsonObject.put("message", "微信支付配置有误！无法生成订单！");
+				JsonObject.put("flag", false);
+				return JsonObject.toString();
+			}
+
+			String total = request.getParameter("total");// 总金额
+			String min = request.getParameter("min");// 最小金额
+			String startTime = request.getParameter("startTime");// 月份
+			String month = request.getParameter("month");// 月份
+			String endTime = Formats.getNextDayByNum(startTime, Integer
+					.parseInt(month));
+			String salary = request.getParameter("salary");// 月收入
+			String payRuleId = request.getParameter("payRuleId");// 规则ID
+			String total_fee = "";
+			if (total != null && !"".equals(total)) {
+				DecimalFormat df = new DecimalFormat("#0");
+				int fen = Integer.parseInt(df
+						.format(Double.parseDouble(total) * 100));
+				total_fee = fen + "";
+			}
+			String oldbody = request.getParameter("body");// 商品描述
+			oldbody = new String(oldbody.getBytes("UTF-8"), "ISO-8859-1");
+			String body = new String(oldbody.getBytes("ISO-8859-1"), "UTF-8");
+			String appid = winXinConf.getAppID();// 小程序ID
+			String mch_id = winXinConf.getMchID();// 商户号
+			String nonce_str = UUID.randomUUID().toString().toUpperCase()
+					.replaceAll("-", "");// 随机字符串
+			String today = new SimpleDateFormat("yyyyMMddHHmmss")
+					.format(new Date());
+			String code = PayUtil.createCode(8);
+			String out_trade_no = mch_id + today + code;// 商户订单号
+			String spbill_create_ip = "200.200.202.134";// 终端IP
+			String notify_url = "https://party.mtm2000.cn/party/pay/aliPay/payNotifyUrl";// 通知地址
+			String trade_type = "JSAPI";// 交易类型
+			String openid = user.getOpenId();// 用户标识
+			// 订单信息
+			Order order = new Order();
+			order.setUserId(user.getId());
+			order.setBranchCode(user.getBranchCode());
+			order.setStartTime(startTime);
+			order.setEndTime(endTime);
+			order.setMonth(month);
+			order.setPayRuleId(payRuleId);
+			order.setSalary(salary);
+			order.setMin(min);
+			order.setSum(total);
+			order.setBody(body);
+			order.setNoncestr(nonce_str);
+			order.setAppId(appid);
+			order.setOutTradeNo(out_trade_no);
+			order.setCreateTime(DateUtil.getCurrentDatetime());
+			order.setIsdelete("0");
+			order.setState("1");
+			payService.save(order);
+			// String detail=request.getParameter("detail") ;//商品详情
+			// String attach="";//附加数据
+			// String time_start;//交易起始时间
+			// String time_expire;//交易结束时间
+
+			// 支付信息
+			Payment paymentPo = new Payment();
+			paymentPo.setAppid(appid);
+			paymentPo.setMch_id(mch_id);
+			paymentPo.setNonce_str(nonce_str);
+			paymentPo.setBody(body);
+			paymentPo.setOut_trade_no(out_trade_no);
+			paymentPo.setTotal_fee(total_fee);
+			paymentPo.setSpbill_create_ip(spbill_create_ip);
+			paymentPo.setNotify_url(notify_url);
+			paymentPo.setTrade_type(trade_type);
+			paymentPo.setOpenid(openid);
+
+			// paymentPo.setDetail(detail);
+			// paymentPo.setAttach(attach);
+			// 把请求参数打包成数组
+			Map sParaTemp = new HashMap();
+			sParaTemp.put("appid", paymentPo.getAppid());
+			sParaTemp.put("mch_id", paymentPo.getMch_id());
+			sParaTemp.put("nonce_str", paymentPo.getNonce_str());
+			sParaTemp.put("body", paymentPo.getBody());
+			sParaTemp.put("out_trade_no", paymentPo.getOut_trade_no());
+			sParaTemp.put("total_fee", paymentPo.getTotal_fee());
+			sParaTemp.put("spbill_create_ip", paymentPo.getSpbill_create_ip());
+			sParaTemp.put("notify_url", paymentPo.getNotify_url());
+			sParaTemp.put("trade_type", paymentPo.getTrade_type());
+			sParaTemp.put("openid", paymentPo.getOpenid());
+			// 除去数组中的空值和签名参数
+			Map sPara = PayUtil.paraFilter(sParaTemp);
+			String prestr = PayUtil.createLinkString(sPara); // 把数组所有元素，按照“参数=参数值”的模式用“&”字符拼接成字符串
+			// String key = "&key=替换为商户支付密钥"; // 商户支付密钥
+			String key = "&key=" + winXinConf.getKey(); // 商户支付密钥
+			// MD5运算生成签名
+			String mysign = PayUtil.sign(prestr, key, "utf-8").toUpperCase();
+			paymentPo.setSign(mysign);
+			// 打包要发送的xml
+			String respXml = MessageUtil.messageToXML(paymentPo);
+			// 打印respXml发现，得到的xml中有“__”不对，应该替换成“_”
+			respXml = respXml.replace("__", "_");
+			String url = "https://api.mch.weixin.qq.com/pay/unifiedorder";// 统一下单API接口链接
+			String param = respXml;
+			// String result = SendRequestForUrl.sendRequest(url, param);//发起请求
+			String result = PayUtil.httpRequest(url, "POST", param);
+			// 将解析结果存储在HashMap中
+			Map map = new HashMap();
+			InputStream in = new ByteArrayInputStream(result.getBytes("utf-8"));
+			// 读取输入流
+			SAXReader reader = new SAXReader();
+			Document document = reader.read(in);
+			// 得到xml根元素
+			Element root = document.getRootElement();
+			// 得到根元素的所有子节点
+			List<Element> elementList = root.elements();
+			for (Element element : elementList) {
+				map.put(element.getName(), element.getText());
+			}
+			// 返回信息
+			String return_code = (String) map.get("return_code");// 返回状态码
+			String return_msg = (String) map.get("return_msg");// 返回信息
+			String result_code = (String) map.get("result_code");// 返回信息
+			System.out.println("return_msg" + return_msg);
+			System.out.println("result_code" + result_code);
+			payService.save(paymentPo);
+			if ("SUCCESS".equals(return_code) && "SUCCESS".equals(result_code)) {
+				// 业务结果
+				String prepay_id = (String) map.get("prepay_id");// 返回的预付单信息
+				String nonceStr = UUID.randomUUID().toString().toUpperCase()
+						.replaceAll("-", "");// 随机字符串
+				order.setNoncestr(nonceStr);
+				order.setPrepayId(prepay_id);
+				payService.update(order);
+				JsonObject.put("nonceStr", nonceStr);
+				JsonObject.put("flag", true);
+				JsonObject.put("package", "prepay_id=" + prepay_id);
+				Long timeStamp = System.currentTimeMillis() / 1000;
+				JsonObject.put("timeStamp", timeStamp + "");
+				String stringSignTemp = "appId=" + appid + "&nonceStr="
+						+ nonceStr + "&package=prepay_id=" + prepay_id
+						+ "&signType=MD5&timeStamp=" + timeStamp;
+				// 再次签名
+				String paySign = PayUtil.sign(stringSignTemp,
+						"&key=" + winXinConf.getKey(), "utf-8").toUpperCase();
+				JsonObject.put("paySign", paySign);
+				JsonObject.put("orderNo", out_trade_no);
+			} else {
+				JsonObject.put("message", return_msg);
+				JsonObject.put("flag", false);
+			}
+			return JsonObject.toString();
+		} catch (Exception e) {
+			e.printStackTrace();
+			JsonObject.put("message", "服务器异常");
+			JsonObject.put("flag", false);
+			return JsonObject.toString();
+		}
+	}
+
+	/**
+	 * 获取openid
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	protected String getOpenID(HttpServletRequest request,
+			HttpServletResponse response) {
+		JSONObject JsonObject = new JSONObject();
+		try {
+			String code = request.getParameter("code");
+			String appid = request.getParameter("appid");
+			String secret = request.getParameter("secret");
+			String requestUrl = "https://api.weixin.qq.com/sns/oauth2/access_token?appid="
+					+ appid
+					+ "&secret="
+					+ secret
+					+ "&code="
+					+ code
+					+ "&grant_type=authorization_code";
+			// 第一次请求 获取access_token 和 openid
+			String oppid;
+			oppid = new HttpRequestor().doGet(requestUrl);
+			JSONObject oppidObj = JSONObject.fromObject(oppid);
+			// String access_token = (String) oppidObj.get("access_token");
+			String openid = (String) oppidObj.get("openid");
+			if (openid != null && !"".equals(openid)) {
+				User user = userService.getUserByOpenId(openid);
+				if (user == null) {
+					JsonObject.put("flag", false);
+					JsonObject.put("openid", openid);
+				} else {
+					JsonObject.put("flag", true);
+					JsonObject.put("openid", openid);
+					JsonObject.put("user", user);
+				}
+			} else {
+				JsonObject.put("flag", false);
+				JsonObject.put("openid", "");
+				JsonObject.put("message", "获取openID失败！请重试！");
+			}
+			return JsonObject.toString();
+		} catch (Exception e) {
+			JsonObject.put("flag", false);
+			JsonObject.put("message", "服务器异常");
+			e.printStackTrace();
+			return JsonObject.toString();
+		}
+	}
+
+	/**
+	 * 保存支付信息
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public String savePay(HttpServletRequest request,
+			HttpServletResponse response) {
+		response.setContentType("application/json; charset=UTF-8");
+		JSONObject JsonObject = new JSONObject();
+		try {
+			String userId = request.getParameter("userId");
+			User user = userService.getUserById(userId);
+			if (user == null) {
+				JsonObject.put("message", "用户未认证！");
+				JsonObject.put("flag", false);
+				return JsonObject.toString();
+			}
+			String orderNo = request.getParameter("orderNo");// 订单号
+
+			Order order = payService.getOrderByNo(orderNo);
+			if (order == null) {
+				JsonObject.put("message", "找不到订单信息！");
+				JsonObject.put("flag", false);
+				return JsonObject.toString();
+			}
+			// 保存缴费记录
+			PayRecord payRecord = new PayRecord();
+			payRecord.setUserId(user.getId());
+			payRecord.setBranchCode(user.getBranchCode());
+			payRecord.setStartTime(order.getStartTime());
+			payRecord.setEndTime(order.getEndTime());
+			payRecord.setMonth(order.getMonth());
+			payRecord.setPayRuleId(order.getPayRuleId());
+			payRecord.setSalary(order.getSalary());
+			payRecord.setMin(order.getMin());
+			payRecord.setSum(order.getSum());
+			payRecord.setCreateTime(DateUtil.getCurrentDatetime());
+			payRecord.setIsdelete("0");
+			payService.save(payRecord);
+			order.setState("2");// 更新订单状态为已缴费
+			order.setUpdateTime(DateUtil.getCurrentDatetime());
+			payService.update(order);
+			// 更新用户的交至时间
+			user.setEndTime(order.getEndTime());
+			userService.updateUser(user);
+			JsonObject.put("flag", true);
+			return JsonObject.toString();
+		} catch (Exception e) {
+			JsonObject.put("flag", false);
+			JsonObject.put("message", "服务器异常");
+			e.printStackTrace();
+			return JsonObject.toString();
+		}
+	}
+
+	/**
+	 * 获取缴费信息
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public String getPayRecord(HttpServletRequest request,
+			HttpServletResponse response) {
+		response.setContentType("application/json; charset=UTF-8");
+		JSONObject JsonObject = new JSONObject();
+		try {
+			String userId = request.getParameter("userId");
+			User user = userService.getUserById(userId);
+			if (user == null) {
+				JsonObject.put("message", "用户未认证！");
+				JsonObject.put("flag", false);
+				return JsonObject.toString();
+			}
+
+			String currentPage = request.getParameter("currentPage");// 当前页
+
+			if (currentPage == null || "".equals(currentPage)) {
+				currentPage = "1";
+			}
+			// 根据userID获取缴费记录
+			PageData pd = payService.getPayRecordList(userId, Integer
+					.parseInt(currentPage));
+			if (pd == null) {
+				JsonObject.put("message", "无缴费记录！");
+				JsonObject.put("flag", true);
+				JsonObject.put("length", 0);
+			} else {
+				if (pd.getList() != null && pd.getList().size() > 0) {
+					JsonObject.put("flag", true);
+					JsonObject.put("currentPage", pd.getCurrentPage());// 当前页数
+					JsonObject.put("maxPage", pd.getMaxPage());// 最大页数
+					JsonObject.put("MaxSize", pd.getMaxSize());// 最大条数
+					JsonObject.put("resultList", pd.getList());// 缴费记录
+					JsonObject.put("length", pd.getList().size());
+				} else {
+					JsonObject.put("message", "无缴费记录！");
+					JsonObject.put("flag", true);
+					JsonObject.put("length", 0);
+				}
+			}
+			return JsonObject.toString();
+		} catch (Exception e) {
+			JsonObject.put("flag", false);
+			JsonObject.put("message", "服务器异常！");
+			e.printStackTrace();
+			return JsonObject.toString();
+		}
+	}
+
+	/**
+	 * 获取公告、服务指南列表
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public String getNoticeList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String userId = request.getParameter("userId");
+		String type = request.getParameter("type");// 0.公告 1.服务指南
+		String currentPage = request.getParameter("currentPage");// 当前页
+		Map map = new HashMap();
+		Map resultMap = new HashMap<String, Object>();
+		if (!"".equals(userId)) {
+			map.put("userId", userId);
+			if (!"".equals(type)) {
+				map.put("type", type);
+			} else {
+				map.put("type", "0");// 如果类型为空则查询“公告”
+			}
+			if (currentPage == null || "".equals(currentPage)
+					|| "0".equals(currentPage)) {
+				currentPage = "1";
+			}
+			PageData pd = noticeService.getNoticeList(map, Integer
+					.parseInt(currentPage));
+			List list = new ArrayList();
+			if (pd != null && pd.getList().size() > 0) {
+				for (int i = 0; i < pd.getList().size(); i++) {
+					Object[] obj = (Object[]) pd.getList().get(i);
+					NoticeMobileForm n = new NoticeMobileForm();
+					n.setId(obj[0] + "");
+					n.setTitle(obj[1] + "");
+					java.sql.Clob clob = (Clob) obj[2];
+					n.setContent(clob.getSubString(1, (int) clob.length()));// 内容
+					n.setUserId(obj[3] + "");// 创建人Id
+					n.setBranchCode(obj[4] + "");// 支部（总支）编码
+					n.setType(obj[5] + "");// 类型,0公告,1服务指南
+					n.setCreateTime(obj[6] + "");// 创建时间
+					n.setUpdateTime(obj[7] + "");// 修改时间
+					n.setDeleteTime(obj[8] + "");// 删除时间
+					n.setIsdelete(obj[9] + "");
+					list.add(n);
+				}
+			}
+
+			if (pd == null) {
+				resultMap.put("length", 0);
+				resultMap.put("message", "无数据！");
+				resultMap.put("flag", true);
+			} else {
+				if (pd.getList() != null && pd.getList().size() > 0) {
+					resultMap.put("flag", true);
+					resultMap.put("currentPage", pd.getCurrentPage());// 当前页数
+					resultMap.put("maxPage", pd.getMaxPage());// 最大页数
+					resultMap.put("MaxSize", pd.getMaxSize());// 最大条数
+					resultMap.put("resultList", list);// 缴费记录,处理过的列表数据
+					resultMap.put("length", list.size());
+				} else {
+					resultMap.put("message", "无数据！");
+					resultMap.put("flag", true);
+					resultMap.put("length", 0);
+				}
+			}
+		} else {
+			resultMap.put("length", 0);
+			resultMap.put("message", "用户信息为空！");
+			resultMap.put("flag", false);
+		}
+		Gson gson = new Gson();
+		String json = gson.toJson(resultMap);
+		System.out.println(json);
+		return json;
+	}
+
+	/**
+	 * 设置已查看公告、服务指南
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public String saveNoticeView(HttpServletRequest request,
+			HttpServletResponse response) {
+		JSONObject JsonObject = new JSONObject();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+		String noticId = request.getParameter("noticId");// 公告、服务指南id
+		String userId = request.getParameter("userId");// 查看人id
+		String type = request.getParameter("type");// 0.公告 1.服务指南
+		try {
+			NoticeView nv = new NoticeView();
+			nv.setNoticeId(noticId);
+			nv.setUserId(userId);
+			nv.setType(type);
+			nv.setCreateTime(sdf.format(new Date()));
+			nv.setIsdelete("0");
+			noticeService.saveNoticeView(nv);
+			JsonObject.put("result", "设置已读成功！");
+			JsonObject.put("success", "100");
+		} catch (Exception e) {
+			JsonObject.put("result", "设置已读失败！");
+			JsonObject.put("success", "101");
+			e.printStackTrace();
+		}
+		return JsonObject.toString();
+	}
+
+	/**
+	 * 获取公告、服务指南
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	public String getNotice(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String noticeId = request.getParameter("noticeId");// 公告、服务指南id
+		Notice notice = noticeService.getnoticeById(noticeId);
+		NoticeMobileForm noticeMobile = new NoticeMobileForm();
+		noticeMobile.setId(notice.getId());
+		noticeMobile.setTitle(notice.getTitle());
+		java.sql.Clob clob = (Clob) notice.getContent();
+		noticeMobile.setContent(clob.getSubString(1, (int) clob.length()));// 内容
+		noticeMobile.setUserId(notice.getUserId());// 创建人Id
+		noticeMobile.setBranchCode(notice.getBranchCode());// 支部（总支）编码
+		noticeMobile.setType(notice.getType());// 类型,0公告,1服务指南
+		noticeMobile.setCreateTime(notice.getCreateTime());// 创建时间
+		noticeMobile.setUpdateTime(notice.getUpdateTime());// 修改时间
+		noticeMobile.setDeleteTime(notice.getDeleteTime());// 删除时间
+		noticeMobile.setIsdelete(notice.getIsdelete());
+		Gson gson = new Gson();
+		String json = gson.toJson(noticeMobile);
+		return json;
+	}
+
+	/**
+	 * 获取知识库详情
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	private String getRepositoryDetail(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String repositoryId = request.getParameter("repositoryId");// 学习档案id
+		List repositoryList = repositoryService.getRepositoryById(repositoryId);
+		Map mapResult = new HashMap();
+		// 知识库
+		Repository repositoryMobile = new Repository();
+		Object[] obj = null;
+		// 附件
+		Accessory accessory = new Accessory();
+		Object[] objFile = null;
+		if (null != repositoryList && repositoryList.size() > 0) {
+			for (int i = 0; i < repositoryList.size(); i++) {
+				obj = (Object[]) repositoryList.get(i);
+			}
+			repositoryMobile.setId(obj[0] + "");
+			repositoryMobile.setTitle(obj[1] + "");
+			repositoryMobile.setContent(obj[2] + "");// 创建人Id
+			repositoryMobile.setUserId(obj[3] + "");// 上传者id
+			repositoryMobile.setBranchCode(obj[4] + "");// 所属党支部编码
+			repositoryMobile.setRank(obj[5] + "");// 权限，级别
+			repositoryMobile.setCreateTime(obj[6] + "");// 创建时间
+			repositoryMobile.setUpdateTime(obj[7] + "");// 修改时间
+			repositoryMobile.setDeleteTime(obj[8] + "");// 删除时间
+			repositoryMobile.setIsdelete(obj[9] + "");
+			mapResult.put("repository", repositoryMobile);
+		}
+
+		List accessoryList = accessoryService.getAccessoryById(repositoryId);
+		if (null != accessoryList && accessoryList.size() > 0) {
+			for (int i = 0; i < accessoryList.size(); i++) {
+				objFile = (Object[]) accessoryList.get(i);
+			}
+			accessory.setId(objFile[0] + "");
+			accessory.setType(objFile[1] + "");// 0公告,1服务指南,2心得,3知识库
+			accessory.setMainId(objFile[2] + "");// 相关主体id
+			accessory.setFileType(objFile[3] + "");// 文件格式
+			accessory.setPath(objFile[4] + "");// 文件路径
+			accessory.setCreateTime(objFile[5] + "");// 创建时间
+			accessory.setUpdateTime(objFile[6] + "");// 修改时间
+			accessory.setDeleteTime(objFile[7] + "");// 删除时间
+			accessory.setIsdelete(objFile[8] + "");
+			mapResult.put("accessory", accessory);
+		}
+		Gson gson = new Gson();
+		String json = gson.toJson(mapResult);
+		return json;
+	}
+
+	/**
+	 * 获取学习档案详情
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	private String getFeelingDetail(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+
+		String feelingId = request.getParameter("feelingId");// 学习档案id
+		List feelingList = feelingService.getFeelingsById(feelingId);
+		Map mapResult = new HashMap();
+		// 学习档案
+		FeelingsMobileForm feelingMobile = new FeelingsMobileForm();
+		Object[] obj = null;
+		// 附件
+		Accessory accessory = new Accessory();
+		Object[] objFile = null;
+		if (null != feelingList && feelingList.size() > 0) {
+			obj = (Object[]) feelingList.get(0);
+			feelingMobile.setId(obj[0] + "");
+			feelingMobile.setTitle(obj[1] + "");
+			java.sql.Clob clob = (Clob) obj[2];
+			feelingMobile.setContent(clob.getSubString(1, (int) clob.length()));// 内容
+			feelingMobile.setUserId(obj[3] + "");// 创建人Id
+			feelingMobile.setBranchCode(obj[4] + "");// 支部（总支）编码
+			feelingMobile.setIsfree(obj[5] + "");// 是否公开
+			feelingMobile.setViewNum(obj[6] + "");// 查看数
+			feelingMobile.setPraiseNum(obj[7] + "");// 点赞数
+			feelingMobile.setComentNum(obj[8] + "");// 评论数
+			feelingMobile.setCreateTime(obj[9] + "");// 创建时间
+			feelingMobile.setUpdateTime(obj[10] + "");// 修改时间
+			feelingMobile.setDeleteTime(obj[11] + "");// 删除时间
+			feelingMobile.setIsdelete(obj[12] + "");
+			mapResult.put("feelings", feelingMobile);
+		}
+
+		List accessoryList = accessoryService.getAccessoryById(feelingId);
+		if (null != accessoryList && accessoryList.size() > 0) {
+			for (int i = 0; i < accessoryList.size(); i++) {
+				objFile = (Object[]) accessoryList.get(i);
+			}
+			accessory.setId(objFile[0] + "");
+			accessory.setType(objFile[1] + "");// 0公告,1服务指南,2心得,3知识库
+			accessory.setMainId(objFile[2] + "");// 相关主体id
+			accessory.setFileType(objFile[3] + "");// 文件格式
+			accessory.setPath(objFile[4] + "");// 文件路径
+			accessory.setCreateTime(objFile[5] + "");// 创建时间
+			accessory.setUpdateTime(objFile[6] + "");// 修改时间
+			accessory.setDeleteTime(objFile[7] + "");// 删除时间
+			accessory.setIsdelete(objFile[8] + "");
+			mapResult.put("accessory", accessory);
+		}
+		Gson gson = new Gson();
+		String json = gson.toJson(mapResult);
+		return json;
+	}
+
+	/**
+	 * 获取知识库列表
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	private String getRepositoryList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String branchCode = request.getParameter("branchCode");
+		String currentPage = request.getParameter("currentPage");// 请求页
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		if (!"".equals(branchCode)) {
+			if (currentPage == null || "".equals(currentPage)
+					|| "0".equals(currentPage)) {
+				currentPage = "1";
+			}
+			PageData pd = repositoryService.getRepositoryList(branchCode,
+					Integer.parseInt(currentPage));
+			if (pd == null) {
+				resultMap.put("length", 0);
+				resultMap.put("message", "无数据！");
+				resultMap.put("flag", true);
+			} else {
+				if (pd.getList() != null && pd.getList().size() > 0) {
+					resultMap.put("flag", true);
+					resultMap.put("currentPage", pd.getCurrentPage());// 当前页数
+					resultMap.put("maxPage", pd.getMaxPage());// 最大页数
+					resultMap.put("MaxSize", pd.getMaxSize());// 最大条数
+					resultMap.put("resultList", pd.getList());// 知识库列表
+					resultMap.put("length", pd.getList().size());
+				} else {
+					resultMap.put("message", "无数据！");
+					resultMap.put("flag", true);
+					resultMap.put("length", 0);
+				}
+			}
+		} else {
+			resultMap.put("length", 0);
+			resultMap.put("message", "党支部编码为空！");
+			resultMap.put("flag", false);
+		}
+		Gson gson = new Gson();
+		String json = gson.toJson(resultMap);
+		System.out.println(json);
+		return json;
+	}
+
+	/**
+	 * 获取圈子(心得)列表
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	private String getFeelingsList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String branchCode = request.getParameter("branchCode");
+		String currentPage = request.getParameter("currentPage");// 请求页
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		if (!"".equals(branchCode)) {
+			if (currentPage == null || "".equals(currentPage)
+					|| "0".equals(currentPage)) {
+				currentPage = "1";
+			}
+			PageData pd = feelingService.getFeelingsListByBranchCode(
+					branchCode, Integer.parseInt(currentPage));
+			if (pd == null) {
+				resultMap.put("length", 0);
+				resultMap.put("message", "无数据！");
+				resultMap.put("flag", true);
+			} else {
+				if (pd.getList() != null && pd.getList().size() > 0) {
+					List<FeelingsMobileForm> list = new ArrayList<FeelingsMobileForm>();
+					for (int i = 0; i < pd.getList().size(); i++) {
+						Object[] obj = (Object[]) pd.getList().get(i);
+						FeelingsMobileForm feelingsMobile = new FeelingsMobileForm();
+						feelingsMobile.setId(obj[0] + "");
+						feelingsMobile.setTitle(obj[1] + "");
+						feelingsMobile.setContent(obj[2] + "");// 内容
+						feelingsMobile.setUserId(obj[3] + "");// 创建人Id
+						feelingsMobile.setBranchCode(obj[4] + "");// 支部（总支）编码
+						feelingsMobile.setIsfree(obj[5] + "");// 是否公开
+						feelingsMobile.setViewNum(obj[6] + "");// 查看数
+						feelingsMobile.setPraiseNum(obj[7] + "");// 点赞数
+						feelingsMobile.setComentNum(obj[8] + "");// 评论数
+						feelingsMobile.setCreateTime(obj[9] + "");// 创建时间
+						feelingsMobile.setUpdateTime(obj[10] + "");// 修改时间
+						feelingsMobile.setDeleteTime(obj[11] + "");// 删除时间
+						feelingsMobile.setIsdelete(obj[12] + "");
+						list.add(feelingsMobile);
+					}
+					resultMap.put("flag", true);
+					resultMap.put("currentPage", pd.getCurrentPage());// 当前页数
+					resultMap.put("maxPage", pd.getMaxPage());// 最大页数
+					resultMap.put("MaxSize", pd.getMaxSize());// 最大条数
+					resultMap.put("resultList", list);// 知识库列表
+					resultMap.put("length", pd.getList().size());
+				} else {
+					resultMap.put("message", "无数据！");
+					resultMap.put("flag", true);
+					resultMap.put("length", 0);
+				}
+			}
+		} else {
+			resultMap.put("length", 0);
+			resultMap.put("message", "党支部编码为空！");
+			resultMap.put("flag", false);
+		}
+		Gson gson = new Gson();
+		String json = gson.toJson(resultMap);
+		System.out.println(json);
+		return json;
+	}
+
+	/**
+	 * 获取我的心得列表
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	private String getMyFeelingsList(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String userId = request.getParameter("userId");
+		String currentPage = request.getParameter("currentPage");// 请求页
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		if (!"".equals(userId)) {
+			if (currentPage == null || "".equals(currentPage)
+					|| "0".equals(currentPage)) {
+				currentPage = "1";
+			}
+			PageData pd = feelingService.getFeelingsListByUserId(userId,
+					Integer.parseInt(currentPage));
+			if (pd == null) {
+				resultMap.put("length", 0);
+				resultMap.put("message", "无数据！");
+				resultMap.put("flag", true);
+			} else {
+				if (pd.getList() != null && pd.getList().size() > 0) {
+					List<FeelingsMobileForm> list = new ArrayList<FeelingsMobileForm>();
+					for (int i = 0; i < pd.getList().size(); i++) {
+						Object[] obj = (Object[]) pd.getList().get(i);
+						FeelingsMobileForm feelingsMobile = new FeelingsMobileForm();
+						feelingsMobile.setId(obj[0] + "");
+						feelingsMobile.setTitle(obj[1] + "");
+						feelingsMobile.setContent(obj[2] + "");// 内容
+						feelingsMobile.setUserId(obj[3] + "");// 创建人Id
+						feelingsMobile.setBranchCode(obj[4] + "");// 支部（总支）编码
+						feelingsMobile.setIsfree(obj[5] + "");// 是否公开
+						feelingsMobile.setViewNum(obj[6] + "");// 查看数
+						feelingsMobile.setPraiseNum(obj[7] + "");// 点赞数
+						feelingsMobile.setComentNum(obj[8] + "");// 评论数
+						feelingsMobile.setCreateTime(obj[9] + "");// 创建时间
+						feelingsMobile.setUpdateTime(obj[10] + "");// 修改时间
+						feelingsMobile.setDeleteTime(obj[11] + "");// 删除时间
+						feelingsMobile.setIsdelete(obj[12] + "");
+						list.add(feelingsMobile);
+					}
+					resultMap.put("flag", true);
+					resultMap.put("currentPage", pd.getCurrentPage());// 当前页数
+					resultMap.put("maxPage", pd.getMaxPage());// 最大页数
+					resultMap.put("MaxSize", pd.getMaxSize());// 最大条数
+					resultMap.put("resultList", list);// 知识库列表
+					resultMap.put("length", pd.getList().size());
+				} else {
+					resultMap.put("message", "无数据！");
+					resultMap.put("flag", true);
+					resultMap.put("length", 0);
+				}
+			}
+		} else {
+			resultMap.put("length", 0);
+			resultMap.put("message", "用户不存在！");
+			resultMap.put("flag", false);
+		}
+		Gson gson = new Gson();
+		String json = gson.toJson(resultMap);
+		System.out.println(json);
+		return json;
+	}
+
+	/**
+	 * 点赞或保存评论
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	private String savePraiseOrComment(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		Map mapResult = new HashMap();
+		try {
+			String userId = request.getParameter("userId");// 点赞人Id
+			String feelingId = request.getParameter("feelingId");// 心得Id
+			String type = request.getParameter("type");// 0心得评论，1心得点赞，2知识库评论，3知识库点赞
+			String content = request.getParameter("content");// 评论内容
+			String atUserId = request.getParameter("atUserId");// AT_USER_ID评论对象id
+			String isDelete = request.getParameter("isDelete");// 是否取消点赞
+			String authorId="";
+			// 获得authorId
+			if ("0".equals(type) || "1".equals(type)) {
+				authorId = feelingService.getUserIdById(feelingId);// 心得authorId
+			}else if ("2".equals(type) || "3".equals(type)) {
+				authorId = repositoryService.getUserIdById(feelingId);// 知识库authorId
+			}
+			if ("1".equals(type) || "3".equals(type)) {
+				List listPraise = praiseService.getPraise(feelingId, userId, type);
+				if (null != listPraise && listPraise.size() > 0) {
+					FeelingsComment fc = (FeelingsComment) listPraise.get(0);
+					// 更新
+					fc.setIsdelete(isDelete);// 0 null 赞 1取消点赞
+					fc.setAuthorId(authorId);
+					SimpleDateFormat df = new SimpleDateFormat(
+							"yyyy-MM-dd HH:mm:ss");// 设置日期格式
+					fc.setUpdateTime(df.format(new Date()));
+					praiseService.updatePraise(fc);
+					mapResult.put("result", "success");
+				} else {
+					// 保存
+					FeelingsComment fc = new FeelingsComment();
+					fc.setUserId(userId);
+					fc.setFeelingsId(feelingId);
+					fc.setType(type);
+					fc.setContent(content);
+					fc.setAtUserId(atUserId);
+					fc.setIsdelete("0");
+					fc.setAuthorId(authorId);
+					SimpleDateFormat df = new SimpleDateFormat(
+							"yyyy-MM-dd HH:mm:ss");// 设置日期格式
+					fc.setCreateTime(df.format(new Date()));
+					praiseService.savePraise(fc);
+					mapResult.put("result", "success");
+				}
+			}else if ("0".equals(type) || "2".equals(type)) {
+				// 保存
+				FeelingsComment fc = new FeelingsComment();
+				fc.setUserId(userId);
+				fc.setFeelingsId(feelingId);
+				fc.setType(type);
+				fc.setContent(content);
+				fc.setAtUserId(atUserId);
+				fc.setAuthorId(authorId);
+				SimpleDateFormat df = new SimpleDateFormat(
+						"yyyy-MM-dd HH:mm:ss");// 设置日期格式
+				fc.setCreateTime(df.format(new Date()));
+				praiseService.savePraise(fc);
+				mapResult.put("result", "success");
+			}
+
+		} catch (Exception e) {
+			mapResult.put("result", "服务器异常");
+		}
+		return new Gson().toJson(mapResult);
+	}
+
+	/**
+	 * 设置已查看公告、服务指南
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public String saveFeelingsView(HttpServletRequest request,
+			HttpServletResponse response) {
+		JSONObject JsonObject = new JSONObject();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+		String feelingsId = request.getParameter("feelingsId");// 公告、服务指南id
+		String repositoryId = request.getParameter("repositoryId");// 公告、服务指南id
+		String userId = request.getParameter("userId");// 查看人id
+		String type = request.getParameter("type");// 0.公告 1.服务指南
+		try {
+			FeelingsView nv = null;
+			List list = feelingService.getFeelingsViewByUserIdAndFeeIdOrRepoId(
+					feelingsId, repositoryId, userId, type);
+			if (list != null && list.size() > 0) {
+				nv = (FeelingsView) list.get(0);
+				nv.setUpdateTime(sdf.format(new Date()));
+			}
+			if (nv == null) {
+				nv = new FeelingsView();
+				nv.setType(type);
+				nv.setFeelingsId(feelingsId);
+				nv.setRepositoryId(repositoryId);
+				nv.setUserId(userId);
+				nv.setCreateTime(sdf.format(new Date()));
+				nv.setIsdelete("0");
+			}
+			feelingService.saveFeelingsView(nv);
+			JsonObject.put("result", "设置已读成功！");
+			JsonObject.put("success", "100");
+		} catch (Exception e) {
+			JsonObject.put("result", "设置已读失败！");
+			JsonObject.put("success", "101");
+			e.printStackTrace();
+		}
+		return JsonObject.toString();
+	}
+	/**
+	 * 保存心得信息
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public String saveFeelings(HttpServletRequest request,
+			HttpServletResponse response) {
+		response.setContentType("application/json; charset=UTF-8");
+		Map map = new HashMap<String, Object>();
+		try {
+			String userId = request.getParameter("userId");
+			if (userId == null||"".equals(userId)) {
+				map.put("message", "用户未认证！");
+				map.put("flag", false);
+				return map.toString();
+			}
+			String branchCode = request.getParameter("branchCode");// 党支部编码
+			String content = request.getParameter("content");// 心得内容
+			String isfree = request.getParameter("isfree");// 是否公开
+			String title = request.getParameter("title");// 心得标题
+			Feelings feelings = new Feelings();
+			feelings.setUserId(userId);
+			feelings.setBranchCode(branchCode);
+			feelings.setComentNum("0");
+			feelings.setContent(Hibernate.createClob(content));
+			feelings.setIsfree(isfree);
+			feelings.setPraiseNum("0");
+			feelings.setTitle(title);
+			feelings.setViewNum("0");
+			feelings.setCreateTime(DateUtil.getCurrentDatetime());
+			feelings.setIsdelete("0");
+			feelingService.saveFeelings(feelings);
+			map.put("flag", true);
+			map.put("message", "保存成功");
+		} catch (Exception e) {
+			map.put("flag", false);
+			map.put("message", "服务器异常");
+			e.printStackTrace();
+		}
+		Gson gson = new Gson();
+		return gson.toJson(map);
+		
+	}
+	
+	/**
+	 * 查看点赞状态或者获取评论
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	private String showPraiseOrComment(HttpServletRequest request,
+			HttpServletResponse response) {
+		Map mapResult = new HashMap();
+		try {
+			String userId = request.getParameter("userId");// 点赞人Id
+			String feelingId = request.getParameter("feelingId");// 心得Id
+			String type = request.getParameter("type");// 0心得评论，1心得点赞，2知识库评论，3知识库点赞
+			if ("1".equals(type) || "3".equals(type)) {
+				List listPraise = praiseService.getPraise(feelingId, userId, type);
+				if (null != listPraise && listPraise.size() > 0) {
+					FeelingsComment fc = (FeelingsComment) listPraise.get(0);
+					if (!"1".equals(fc.getIsdelete())) {
+						// 已赞
+						mapResult.put("result", false);
+					} else {
+						// 未赞
+						mapResult.put("result", true);
+					}
+				} else {
+					// 未赞
+					mapResult.put("result", true);
+				}
+			} else if ("0".equals(type) || "2".equals(type)) {
+				List listComment = praiseService.getComment(feelingId,type);
+				
+			    List<FeelingsCommentForm> resultList=new ArrayList<FeelingsCommentForm>();
+			   if (listComment.size()>0) {
+			    for (int i = 0; i < listComment.size(); i++) {
+			    	String[] objects=(String[]) listComment.get(i);
+					FeelingsCommentForm feelingsCommentForm=new FeelingsCommentForm();
+					feelingsCommentForm.setId(objects[0]);
+					feelingsCommentForm.setFeelingsId(objects[1]);
+					feelingsCommentForm.setUserId(objects[2]);
+					feelingsCommentForm.setType(objects[3]);
+					feelingsCommentForm.setContent(objects[4]);
+					feelingsCommentForm.setAtUserId(objects[5]);
+					feelingsCommentForm.setCreateTime(objects[6]);
+					feelingsCommentForm.setUpdateTime(objects[7]);
+					feelingsCommentForm.setDeleteTime(objects[8]);
+					feelingsCommentForm.setIsdelete(objects[9]);
+					feelingsCommentForm.setAuthorId(objects[10]);
+					feelingsCommentForm.setUserName(objects[11]);
+					resultList.add(feelingsCommentForm);
+				}
+			   }
+				
+				//评论
+				if (null != listComment && listComment.size() > 0) {
+					mapResult.put("FeelingsCommentList", resultList);
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			mapResult.put("result", "服务器异常");
+		}
+		return new Gson().toJson(mapResult);
+	}
+	
+	/**
+	 * 保存知识库
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public String saveRepository(HttpServletRequest request,
+			HttpServletResponse response) {
+		response.setContentType("application/json; charset=UTF-8");
+		Map map = new HashMap<String, Object>();
+		try {
+			String userId = request.getParameter("userId");
+			if (userId == null||"".equals(userId)) {
+				map.put("message", "用户未认证！");
+				map.put("flag", false);
+				return map.toString();
+			}
+			String branchCode = request.getParameter("branchCode");// 党支部编码
+			String content = request.getParameter("content");// 心得内容
+			String isfree = request.getParameter("isfree");// 是否公开
+			String title = request.getParameter("title");// 心得标题
+			String rank = request.getParameter("rank");// 级别
+
+			Repository repository = new Repository();
+			repository.setUserId(userId);
+			repository.setBranchCode(branchCode);
+			repository.setContent(content);
+			repository.setRank(rank);
+			repository.setTitle(title);
+			repository.setCreateTime(DateUtil.getCurrentDatetime());
+			repository.setIsdelete("0");
+			repositoryService.saveRepository(repository);
+			map.put("flag", true);
+			map.put("message", "保存成功");
+		} catch (Exception e) {
+			map.put("flag", false);
+			map.put("message", "服务器异常");
+			e.printStackTrace();
+		}
+		Gson gson = new Gson();
+		return gson.toJson(map);
+		
+	}
+	/**
+	 * 获取心得数,评论数,点赞数
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	private String getMyFeelingsCount(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String userId = request.getParameter("userId");
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		if (!"".equals(userId)) {
+			int feelingsCount = feelingService.getFeelingsCountByUserId(userId);//心得数
+			int commentCount = feelingService.getCommentCountByUserId(userId);//评论数
+			int praiseCount = feelingService.getPraiseCountByUserId(userId);//点赞数
+			
+			resultMap.put("feelingsCount", feelingsCount);
+			resultMap.put("commentCount", commentCount);
+			resultMap.put("praiseCount", praiseCount);
+			resultMap.put("flag", true);
+			
+		} else {
+			resultMap.put("length", 0);
+			resultMap.put("message", "用户不存在！");
+			resultMap.put("flag", false);
+		}
+		Gson gson = new Gson();
+		String json = gson.toJson(resultMap);
+		System.out.println(json);
+		return json;
+	}
+
+}
+
+
+
+
+
+
+
+

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+			    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+		  	    http://www.springframework.org/schema/mvc 
+			    http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd 
+			    http://www.springframework.org/schema/context 
+			    http://www.springframework.org/schema/context/spring-context-3.0.xsd 
+			    http://www.springframework.org/schema/aop 
+		  	    http://www.springframework.org/schema/aop/spring-aop-3.0.xsd 
+			    http://www.springframework.org/schema/tx 
+			    http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+			    http://www.springframework.org/schema/task  
+				http://www.springframework.org/schema/task/spring-task-3.2.xsd">
+			    
+
+	<aop:aspectj-autoproxy />
+
+	<context:component-scan base-package="cn.mtm2000.common" />
+	<context:component-scan base-package="com.mtm.party" />
+	
+	<mvc:annotation-driven/> 
+	<!-- task任务扫描注解 -->  
+	<task:annotation-driven/>  
+	<mvc:resources location="/img/" mapping="/img/**"/>  
+    <mvc:resources location="/js/" mapping="/js/**"/> 
+    
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+
+	<mvc:default-servlet-handler />
+	<mvc:annotation-driven />
+	<!--<mvc:interceptors>
+		 第一个拦截器：后台是否登录的拦截器 
+		<mvc:interceptor>
+			<mvc:mapping path="/*/*.do"/>
+			<bean class="com.mtm.party.util.LoginInterceptor"></bean>
+		</mvc:interceptor>
+	</mvc:interceptors>
+	--><tx:annotation-driven transaction-manager="transactionManager" />
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+	<bean id="parentDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close">
+		<property name="driverClass">
+			<value>oracle.jdbc.driver.OracleDriver</value>
+		</property>
+		<property name="jdbcUrl">
+			<value>jdbc:oracle:thin:@200.200.101.205:1521:newnhis</value>
+		</property>
+		<property name="minPoolSize">
+			<value>1</value>
+		</property>
+		<property name="maxPoolSize">
+			<value>5</value>
+		</property>
+		<property name="maxIdleTime">
+			<value>1800</value>
+		</property>
+		<property name="acquireIncrement">
+			<value>2</value>
+		</property>
+		<property name="maxStatements">
+			<value>0</value>
+		</property>
+		<property name="initialPoolSize">
+			<value>2</value>
+		</property>
+		<property name="idleConnectionTestPeriod">
+			<value>1800</value>
+		</property>
+		<property name="acquireRetryAttempts">
+			<value>30</value>
+		</property>
+		<property name="acquireRetryDelay">
+			<value>100</value>
+		</property>
+		<property name="breakAfterAcquireFailure">
+			<value>false</value>
+		</property>
+		<property name="testConnectionOnCheckout">
+			<value>false</value>
+		</property>
+	</bean>
+
+	<bean id="pretrialDataSource" parent="parentDataSource">
+		<property name="user" value="party" />
+		<property name="password" value="party" />
+	</bean>
+
+	<bean id="dataSource" class="cn.mtm2000.common.hibernate.DynamicDataSource">
+		<property name="targetDataSources">
+			<map key-type="java.lang.String">
+				<entry key="pretrial" value-ref="pretrialDataSource" />
+			</map>
+		</property>
+		<property name="defaultTargetDataSource" ref="pretrialDataSource" />
+	</bean>
+
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+		<property name="dataSource">
+			<ref local="dataSource" />
+		</property>
+		<property name="mappingJarLocations">
+			<list>
+				<value>classpath*:WEB-INF/lib/mtmcomm0.1.jar</value>
+			</list>
+		</property>
+		<property name="mappingLocations">
+			<list>
+				<value>classpath*:cn/mtm2000/common/**/*.hbm.xml</value>
+				<value>classpath*:com/mtm/party/**/*.hbm.xml</value>
+			</list>
+		</property>
+
+
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">
+					org.hibernate.dialect.Oracle10gDialect
+				</prop>
+				
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.format_sql">false</prop>
+				<prop key="hibernate.use_sql_comments">false</prop>
+				<prop key="hibernate.jdbc.fetch_size">5</prop>
+				<prop key="hibernate.jdbc.batch_size">50</prop>
+				<prop key="hibernate.connection.SetBigStringTryClob">
+					true
+				</prop>
+				<prop key="hibernate.query.factory_class">
+					org.hibernate.hql.classic.ClassicQueryTranslatorFactory
+				</prop>
+				<prop key="hibernate.use_outer_join">true</prop>
+				<prop key="hibernate.bytecode.use_reflection_optimizer">
+					true
+				</prop>
+				<prop key="hibernate.cache.use_second_level_cache">
+					true
+				</prop>
+				<prop key="hibernate.cache.use_query_cache">true</prop>
+				<prop key="hibernate.cache.provider_class">
+					org.hibernate.cache.EhCacheProvider
+				</prop>
+				<prop key="hibernate.bytecode.use_reflection_optimizer">
+					true
+				</prop>
+			</props>
+		</property>
+	</bean>
+
+	<bean id="hibernateTemplate" class="org.springframework.orm.hibernate3.HibernateTemplate">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<!-- set the max upload size100MB -->
+		<property name="maxUploadSize">
+			<value>104857600</value>
+		</property>
+		<property name="maxInMemorySize">
+			<value>4096</value>
+		</property>
+		<property name="defaultEncoding" >
+		    <value>UTF-8</value>
+		</property>
+	</bean>
+</beans>
