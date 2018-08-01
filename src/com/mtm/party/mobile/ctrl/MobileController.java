@@ -201,7 +201,6 @@ public class MobileController {
 		String nickName = request.getParameter("nickName");
 		String nickImage = request.getParameter("nickImage");
 		String openId = request.getParameter("openId");
-		String openId = request.getParameter("openId");
 		try {
 			List obj = mobileService.getBlessUserByNickImage(nickImage);
 			if (null!=obj && obj.size()>0) {
