@@ -74,6 +74,7 @@ public class ImageUtils {
         Thumbnails.of(desPath).size(desWidth, desHeight)
                 .outputQuality(accuracy).toFile(desPath);
         commpressPicCycle(desPath, desFileSize, accuracy);
+        
     }
 
 }
