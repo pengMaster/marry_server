@@ -1,7 +1,10 @@
 # marry_server - 服务端
 
 #### 项目介绍 
-婚礼邀请函
+<div>扫码体验 - 婚礼邀请函</div>
+<div>
+    <img src="https://github.com/pengMaster/picApplyGit/blob/master/marry_readme/gh_f211ccd8936f_430.jpg" margin-lift = "40" width="120" height="120"  alt=""/>
+</div>
 
 #### 效果图
 <div>
