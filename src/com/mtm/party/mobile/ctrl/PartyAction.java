@@ -41,6 +41,12 @@ import com.mtm.party.mobile.model.UserImageBean;
 import com.mtm.party.mobile.service.MobileService;
 import com.mtm.party.user.service.UserService;
 
+/**
+ * 中文参数接收方式:URLDecoder.decode(request.getParameter("body"), "UTF-8");
+ * 
+ * 后台管理对接
+ */
+
 @Controller
 @RequestMapping("/")
 public class PartyAction {

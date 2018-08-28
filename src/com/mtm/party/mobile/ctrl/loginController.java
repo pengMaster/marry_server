@@ -21,7 +21,11 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
+/**
+ * 中文参数接收方式:URLDecoder.decode(request.getParameter("body"), "UTF-8");
+ * 
+ * 微信登陆对接 - 目前正在审核中
+ */
 @Controller
 @RequestMapping(value = "/index")
 public class loginController {
