@@ -23,6 +23,7 @@
 
 #### 项目说明
  - 项目架构：SpringMvc
+ - 环境：MyEclipse 8.5  Jdk:1.6
  - 服务器：阿里云服务
  - 域名：pengmaster.com
  - 数据库：在服务器上装的mysql 地址：47.104.198.222:3306
