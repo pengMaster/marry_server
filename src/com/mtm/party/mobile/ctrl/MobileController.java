@@ -44,11 +44,14 @@ import com.mtm.party.mobile.model.BlessComment;
 import com.mtm.party.mobile.model.BlessUser;
 import com.mtm.party.mobile.model.FeelingsMobileForm;
 import com.mtm.party.mobile.model.HttpHeaderInfoBean;
+import com.mtm.party.mobile.model.ImageGirlBean;
 import com.mtm.party.mobile.model.ImageList;
 import com.mtm.party.mobile.model.NoticeMobileForm;
 import com.mtm.party.mobile.service.MobileService;
 import com.mtm.party.mobile.util.HttpHeaderUtils;
+import com.mtm.party.mobile.util.Reptilian;
 import com.mtm.party.user.model.User;
+import com.mtm.party.user.model.UserInfo;
 import com.mtm.party.user.service.UserService;
 import com.mtm.party.util.Formats;
 import com.mtm.party.util.HttpRequestor;
@@ -65,33 +68,16 @@ import com.mtm.party.util.StringUtils;
 @Controller
 @RequestMapping("/mobile")
 public class MobileController {
+	
 	private final String SAVE_USER = "SAVE_USER";// 用户注册
-	private final String GET_PAY = "GET_PAY";// 支付申请订单
-	private final String SAVE_PAY = "SAVE_PAY";// 保存缴费记录
-	private final String GET_PAY_RECORD = "GET_PAY_RECORD";// 获取缴费记录
 	private final String GET_OPENID = "GET_OPENID";// 支付申请订单
 	private final String LOGIN_IN = "LOGIN_IN";// 登录
-	private final String UNBUNDLING = "UNBUNDLING";// 解绑用户
-	private final String GET_NOTICE_LIST = "GET_NOTICE_LIST";// 获取公告、服务指南列表
-	private final String SAVE_NOTICE_VIEW = "SAVE_NOTICE_VIEW";// 保存已查看公告、服务指南
-	private final String GET_NOTICE = "GET_NOTICE";// 获取公告、服务指南
-	private final String GET_REPOSITORY_DETAIL = "GET_REPOSITORY_DETAIL";// 获取知识库详情
-	private final String GET_FEELING_DETAIL = "GET_FEELING_DETAIL";// 获取学习档案详情
-	private final String GET_REPOSITORY_LIST = "GET_REPOSITORY_LIST";// 获取知识库列表
-	private final String GET_FEELINGS_LIST = "GET_FEELINGS_LIST";// 获取心得（圈子）列表
-	private final String GET_MY_FEELINGS_LIST = "GET_MY_FEELINGS_LIST";// 获取我的心得列表
-	private final String SHOW_PRAISE_STATE = "SHOW_PRAISE_STATE";// 查看是否被点赞或者评论
-	private final String SAVE_FEELINGS_VIEW = "SAVE_FEELINGS_VIEW";// 知识库、心得查看记录存储
-	private final String SAVE_FEELINGS = "SAVE_FEELINGS";// 保存心得
-	private final String SAVE_REPOSITORY = "SAVE_REPOSITORY";// 保存知识库
-	private final String GET_MY_FEELINGS_COUNT = "GET_MY_FEELINGS_COUNT";// 获取点赞数、评论数、心得数
-	private final String GIVE_ME_PRAISE_OR_COMMENT = "GIVE_ME_PRAISE_OR_COMMENT";// 获取被点赞、被评论列表
-	private final String GET_MY_PRAISED_LIST = "GET_MY_PRAISED_LIST";// 获取我赞过的列表
 	private final String GET_IMAGE = "GET_IMAGE";// 获取图片
 	private final String GET_PRAISE = "GET_PRAISE";// 获取赞列表
 	private final String SAVE_PRAISE = "SAVE_PRAISE";// 保存赞
 	private final String GET_COMMENT = "GET_COMMENT";// 获取评论列表
 	private final String SAVE_COMMENT = "SAVE_COMMENT";// 保存评论
+	
 
 	private JSONArray jsonArray = new JSONArray();
 	@Resource
@@ -172,7 +158,7 @@ public class MobileController {
 			}else if (GET_COMMENT.equals(method)) {
 				// 获取评论列表
 				json = getCommentList(request, response);
-			} 
+			}
 			else{
 				json = "测试";
 			}
@@ -187,7 +173,7 @@ public class MobileController {
 		}
 		return null;
 	}
-	
+
 
 	/**
 	 * 保存赞
@@ -351,112 +337,54 @@ public class MobileController {
 	/**
 	 * 用户注册
 	 * 
-	 * @author wangsong
+	 * @author wp
 	 * @return
 	 */
 	public String saveUser(HttpServletRequest request,
 			HttpServletResponse response) {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-		User u = new User();
-		String account = request.getParameter("account");// 用户名
-		String pwd = request.getParameter("password");// 密码
-		String name = "";
+		
+		String openId = request.getParameter("openId");
+		String userInfos = request.getParameter("userInfo");
+		Gson gson = new Gson();
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// 格式化到秒
 		try {
-			name = URLDecoder.decode(request.getParameter("name"), "UTF-8");// 名字
-		} catch (UnsupportedEncodingException e1) {
-			System.out.println("error:saveUser,URLDecoder.decode异常");
-		}
-		String cardType = request.getParameter("cardType");// 证件类型
-		String idcard = request.getParameter("idCard");// 身份证号
-		String phone = request.getParameter("phone");// 手机号
-		String branchCode = request.getParameter("branchCode");// 所属党支部编码
-		String salary = request.getParameter("salary");// 月收入
-		String address = request.getParameter("address");// 住址
-		String joiningTime = request.getParameter("joiningTime");// 入党时间
-		String sponsor = request.getParameter("sponsor");// 入党介绍人
-		String openId = request.getParameter("openId");// 微信识别码
-		String rank = request.getParameter("rank");// 用户权限，级别
-		String startTime = request.getParameter("startTime");// 开始交党费日期
-		String endTime = request.getParameter("endTime");// 党费交至日期
-		// String updateTime=request.getParameter("account");//修改时间
-		// String deleteTime=request.getParameter("account");//删除时间
-		// Md5 md5 = new Md5(pwd);
-		// md5.processString();
-		// String password = md5.getStringDigest();
-		User user = userService.getUserByIdCardAndPhone(idcard, phone);
-		JSONObject JsonObject = new JSONObject();
-		try {
-			if (user == null) {
-				JsonObject.put("result", "用户不存在！");
-				JsonObject.put("success", "204");
-			} else {
-				if (ValidUtil.isNoEmpty(user.getOpenId())) {
-					JsonObject.put("result", "该用户已关联！");
-					JsonObject.put("success", "200");
-					JsonObject.put("user", user);
-				} else {
-					if (ValidUtil.isNoEmpty(account)) {
-						user.setAccount(account);
+			if (null!=openId) {
+				Object userOlderList = userService.getUserById(openId);
+				if (null!=userOlderList) {
+					List<Object> list = (List<Object>)userOlderList;
+					if (list.size()>0 && null!=list.get(0) && list.get(0) instanceof Object[]) {
+						Object[] listResult = (Object[])list.get(0);
+						User user = new User();
+						user.setId(listResult[0]+"");
+						user.setOpenId(listResult[1]+"");
+						user.setAvatarUrl(listResult[2]+"");
+						user.setCity(listResult[3]+"");
+						user.setNickName(listResult[4]+"");
+						user.setProvince(listResult[5]+"");
+						user.setCreateTime(listResult[6]+"");
+						user.setUpdateTime(formatter.format(new Date()));
+						userService.updateUser(user);
+						System.out.println("--------------update_user_success------------");
+						return "更新成功";
 					}
-					// if (ValidUtil.isNoEmpty(pwd)) {
-					// u.setPassword(password);
-					// }
-					if (ValidUtil.isNoEmpty(name)
-							&& !user.getName().equals(name)) {
-						user.setName(name);
-					}
-					if (ValidUtil.isNoEmpty(cardType)) {
-						user.setCardType(cardType);
-					}
-					if (ValidUtil.isNoEmpty(idcard)
-							&& !user.getIdcard().equals(idcard)) {
-						user.setIdcard(idcard);
-					}
-					if (ValidUtil.isNoEmpty(phone)
-							&& !user.getPhone().equals(phone)) {
-						user.setPhone(phone);
-					}
-					if (ValidUtil.isNoEmpty(branchCode)) {
-						user.setBranchCode(branchCode);
-					}
-					if (ValidUtil.isNoEmpty(salary)) {
-						user.setSalary(salary);
-					}
-					if (ValidUtil.isNoEmpty(address)) {
-						user.setAddress(address);
-					}
-					if (ValidUtil.isNoEmpty(joiningTime)) {
-						user.setJoiningTime(joiningTime);
-					}
-					if (ValidUtil.isNoEmpty(sponsor)) {
-						user.setSponsor(sponsor);
-					}
-					if (ValidUtil.isNoEmpty(openId)) {
-						user.setOpenId(openId);
-					}
-					if (ValidUtil.isNoEmpty(rank)) {
-						user.setRank(rank);
-					}
-					if (ValidUtil.isNoEmpty(startTime)) {
-						user.setStartTime(startTime);
-					}
-					if (ValidUtil.isNoEmpty(endTime)) {
-						user.setEndTime(endTime);
-					}
-					user.setCreateTime(DateUtil.getCurrentDatetime());
-					user.setIsDelete("0");
-					userService.updateUser(user);
-					JsonObject.put("result", "关联成功！");
-					JsonObject.put("success", "201");
-					JsonObject.put("user", user);
 				}
 			}
+			User user = new User();
+			user.setId(getId());
+			user.setOpenId(openId);
+			UserInfo userInfo = gson.fromJson(userInfos, UserInfo.class);
+			user.setAvatarUrl(userInfo.getAvatarUrl());
+			user.setCity(userInfo.getCity());
+			user.setNickName(userInfo.getNickName());
+			user.setProvince(userInfo.getProvince());
+			user.setCreateTime(formatter.format(new Date()));
+			userService.saveUser(user);
+			System.out.println("--------------save_user_success------------");
+			return "保存成功";
 		} catch (Exception e) {
-			JsonObject.put("result", "关联失败！");
-			JsonObject.put("success", "203");
 			e.printStackTrace();
+			return "保存失败";
 		}
-		return JsonObject.toString();
 	}
 
 	/**
@@ -565,7 +493,24 @@ public class MobileController {
 		}
 	}
 
-
+    /** 
+     * @描述 java生成流水号  
+     * 14位时间戳 + 6位随机数 
+     * @作者 shaomy 
+     * @时间:2017-1-12 上午10:10:41 
+     * @参数:@return  
+     * @返回值：String 
+     */ 
+	   public static String getId(){  
+        String id=""; 
+        //获取当前时间戳		
+        SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");  
+        String temp = sf.format(new Date());  
+	       //获取6位随机数
+        int random=(int) ((Math.random()+1)*100000);  
+        id=temp+random;  
+        return id;  
+    } 
 }
 
 

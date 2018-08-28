@@ -1,5 +1,7 @@
 package com.mtm.party.user.service;
 
+import java.util.List;
+
 import javax.annotation.Resource;
 
 
@@ -103,18 +105,33 @@ public class UserService {
 	 * @param userId
 	 * @return
 	 */
-	public User getUserById(String userId) {
+	public Object getUserById(String openId) {
 		QlBuilder s = new QlBuilder();
 		Object o = null;
-		s.segment("from User u where u.id = ");
-		s.value(userId);
-		o = dao.uniqueResult(s);
+		s.segment("select * from T_USER u where u.openId=");;
+		s.value(openId);
+		o = dao.listBySql(s);
 		if (o == null) {
 			return null;
 		}
-		return (User) o;
+		return o;
 	}
 	
+	/**
+	 * 获取所有用户信息
+	 * @param userId
+	 * @return
+	 */
+	public Object getUsers() {
+		QlBuilder s = new QlBuilder();
+		Object o = null;
+		s.segment("select * from T_USER u");;
+		o = dao.listBySql(s);
+		if (o == null) {
+			return null;
+		}
+		return  o;
+	}
 	/**
 	 * 根据openid获取user
 	 * @param account
