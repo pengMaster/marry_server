@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mtm.party.user.model.User;
+import com.mtm.party.user.model.UserRecord;
 
 import cn.mtm2000.common.hibernate.HibernateDao;
 import cn.mtm2000.common.hibernate.QlBuilder;
@@ -69,7 +70,13 @@ public class UserService {
 	public void saveUser(User user){
 		dao.save(user);
 	}
-	
+	/**
+	 * 保存用户
+	 * @param user
+	 */
+	public void saveUserRecord(UserRecord user){
+		dao.save(user);
+	}
 	/**
 	 * 关联用户
 	 * @param user

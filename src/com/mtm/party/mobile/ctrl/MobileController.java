@@ -52,6 +52,7 @@ import com.mtm.party.mobile.util.HttpHeaderUtils;
 import com.mtm.party.mobile.util.Reptilian;
 import com.mtm.party.user.model.User;
 import com.mtm.party.user.model.UserInfo;
+import com.mtm.party.user.model.UserRecord;
 import com.mtm.party.user.service.UserService;
 import com.mtm.party.util.Formats;
 import com.mtm.party.util.HttpRequestor;
@@ -62,8 +63,8 @@ import com.mtm.party.util.StringUtils;
 /**
  * 中文参数接收方式:URLDecoder.decode(request.getParameter("body"), "UTF-8");
  * 
- * 
- * */
+ * 微信小程序对接
+ */
 
 @Controller
 @RequestMapping("/mobile")
@@ -188,7 +189,12 @@ public class MobileController {
 		String nickImage = request.getParameter("nickImage");
 		String openId = request.getParameter("openId");
 		try {
-			List obj = mobileService.getBlessUserByNickImage(nickImage);
+			List obj;
+			if (null!=openId && !"".equals(openId)) {
+				obj = mobileService.getBlessUserByOpenId(openId);
+			}else {
+				obj = mobileService.getBlessUserByNickImage(nickImage);
+			}
 			if (null!=obj && obj.size()>0) {
 				return "你已经点过赞了";
 			}
@@ -348,7 +354,19 @@ public class MobileController {
 		Gson gson = new Gson();
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// 格式化到秒
 		try {
-			if (null!=openId) {
+			//用户操作记录
+			UserRecord userRecord = new UserRecord();
+			userRecord.setId(getId());
+			userRecord.setOpenId(openId);
+			UserInfo userInfo = gson.fromJson(userInfos, UserInfo.class);
+			userRecord.setAvatarUrl(userInfo.getAvatarUrl());
+			userRecord.setCity(userInfo.getCity());
+			userRecord.setNickName(userInfo.getNickName());
+			userRecord.setProvince(userInfo.getProvince());
+			userRecord.setCreateTime(formatter.format(new Date()));
+			userService.saveUserRecord(userRecord);
+			
+			if (null!=openId && !"".equals(openId)) {
 				Object userOlderList = userService.getUserById(openId);
 				if (null!=userOlderList) {
 					List<Object> list = (List<Object>)userOlderList;
@@ -372,7 +390,6 @@ public class MobileController {
 			User user = new User();
 			user.setId(getId());
 			user.setOpenId(openId);
-			UserInfo userInfo = gson.fromJson(userInfos, UserInfo.class);
 			user.setAvatarUrl(userInfo.getAvatarUrl());
 			user.setCity(userInfo.getCity());
 			user.setNickName(userInfo.getNickName());

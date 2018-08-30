@@ -51,7 +51,18 @@ public class MobileService {
 		QlBuilder ql=new QlBuilder();
 		ql.segment(" select c.* FROM T_BLESS_USER c where c.nick_image=").value(nick_image);
 		List obj = dao.listBySql(ql);
-		if (null !=obj) {
+		if (null !=obj && obj.size()>0) {
+			return obj;
+		}else{
+			return null;
+		}
+	}
+	//根据nick_image查找
+	public List getBlessUserByOpenId(String open_id){
+		QlBuilder ql=new QlBuilder();
+		ql.segment(" select c.* FROM T_BLESS_USER c where c.open_id=").value(open_id);
+		List obj = dao.listBySql(ql);
+		if (null !=obj && obj.size()>0) {
 			return obj;
 		}else{
 			return null;

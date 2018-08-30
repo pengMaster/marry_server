@@ -94,8 +94,9 @@
 	</bean>
 
 	<bean id="pretrialDataSource" parent="parentDataSource">
-		<property name="user" value="root" />
-		<property name="password" value="123456" />
+		<property name="user" value="****" />
+		<!--之前方便大家测试  带着密码  结果被人恶意删库 只好隐藏掉了-->
+		<property name="password" value="******" />
 	</bean>
 
 	<bean id="dataSource" class="cn.mtm2000.common.hibernate.DynamicDataSource">

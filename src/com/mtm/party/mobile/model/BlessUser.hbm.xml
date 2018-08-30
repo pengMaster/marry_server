@@ -7,7 +7,7 @@
 <hibernate-mapping>
     <class name="com.mtm.party.mobile.model.BlessUser" table="T_BLESS_USER" schema="marry">
         <id name="id" type="string">
-            <column name="id" length="11" />
+            <column name="id" length="255" />
         </id>
         <property name="create_time" type="string">
             <column name="create_time" />
