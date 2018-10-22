@@ -1,63 +1,40 @@
 package com.mtm.party.mobile.ctrl;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.sql.Clob;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.coobird.thumbnailator.Thumbnails;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-import org.apache.commons.io.FileUtils;
-import org.dom4j.Document;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
-import org.hibernate.Hibernate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import cn.mtm2000.common.hibernate.PageData;
-import cn.mtm2000.common.util.DateUtil;
 import cn.mtm2000.common.util.ValidUtil;
 
 import com.google.gson.Gson;
 import com.mtm.party.mobile.model.BlessComment;
 import com.mtm.party.mobile.model.BlessUser;
-import com.mtm.party.mobile.model.FeelingsMobileForm;
 import com.mtm.party.mobile.model.HttpHeaderInfoBean;
-import com.mtm.party.mobile.model.ImageGirlBean;
 import com.mtm.party.mobile.model.ImageList;
-import com.mtm.party.mobile.model.NoticeMobileForm;
 import com.mtm.party.mobile.service.MobileService;
 import com.mtm.party.mobile.util.HttpHeaderUtils;
-import com.mtm.party.mobile.util.Reptilian;
 import com.mtm.party.user.model.User;
 import com.mtm.party.user.model.UserInfo;
 import com.mtm.party.user.model.UserRecord;
 import com.mtm.party.user.service.UserService;
-import com.mtm.party.util.Formats;
 import com.mtm.party.util.HttpRequestor;
-import com.mtm.party.util.MessageUtil;
-import com.mtm.party.util.PayUtil;
 import com.mtm.party.util.StringUtils;
 
 /**
@@ -114,7 +91,7 @@ public class MobileController {
 	/**
 	 * 接口方法总入口
 	 * 
-	 * @author wangsong
+	 * @author wangpeng
 	 * @return
 	 * @throws Exception
 	 *
@@ -175,6 +152,7 @@ public class MobileController {
 		return null;
 	}
 
+	
 
 	/**
 	 * 保存赞
@@ -233,6 +211,7 @@ public class MobileController {
 			blessComment.setNick_image(nickImage+"");
 			blessComment.setNick_name(nickName+"");
 			blessComment.setComment(comment+"");
+			blessComment.setOpen_id(openId+"");
 			SimpleDateFormat df = new SimpleDateFormat("yyyy年MM月dd日 HH点mm分"); 
 			blessComment.setCreate_time(df.format(new Date()));
 			blessComment.setId(System.currentTimeMillis()+"");

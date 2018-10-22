@@ -101,6 +101,7 @@
 	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/gson-2.1.jar"/>
 	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/jdom-1.0.jar"/>
 	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/thumbnailator-0.4.2-all.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.6.0_45"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/jsoup-1.10.2.jar"/>
 	<classpathentry kind="output" path="WebRoot/WEB-INF/classes"/>
 </classpath>
