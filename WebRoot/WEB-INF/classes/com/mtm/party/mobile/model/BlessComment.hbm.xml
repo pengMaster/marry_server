@@ -24,6 +24,8 @@
         <property name="open_id" type="string">
             <column name="open_id" />
         </property>
-
+        <property name="user_id" type="string">
+            <column name="user_id" />
+        </property>
     </class>
 </hibernate-mapping>

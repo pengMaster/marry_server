@@ -20,6 +20,8 @@ import net.sf.json.JSONObject;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import cn.mtm2000.common.util.ValidUtil;
 
@@ -27,13 +29,20 @@ import com.google.gson.Gson;
 import com.mtm.party.mobile.model.BlessComment;
 import com.mtm.party.mobile.model.BlessUser;
 import com.mtm.party.mobile.model.HttpHeaderInfoBean;
+import com.mtm.party.mobile.model.ImageHomeBean;
 import com.mtm.party.mobile.model.ImageList;
+import com.mtm.party.mobile.model.ShareInfo;
 import com.mtm.party.mobile.service.MobileService;
 import com.mtm.party.mobile.util.HttpHeaderUtils;
+import com.mtm.party.user.model.DetailImages;
+import com.mtm.party.user.model.HostUser;
+import com.mtm.party.user.model.MapInfo;
 import com.mtm.party.user.model.User;
 import com.mtm.party.user.model.UserInfo;
+import com.mtm.party.user.model.UserLogo;
 import com.mtm.party.user.model.UserRecord;
 import com.mtm.party.user.service.UserService;
+import com.mtm.party.util.FileUtils;
 import com.mtm.party.util.HttpRequestor;
 import com.mtm.party.util.StringUtils;
 
@@ -46,23 +55,34 @@ import com.mtm.party.util.StringUtils;
 @Controller
 @RequestMapping("/mobile")
 public class MobileController {
-	
+
 	private final String SAVE_USER = "SAVE_USER";// 用户注册
 	private final String GET_OPENID = "GET_OPENID";// 支付申请订单
 	private final String LOGIN_IN = "LOGIN_IN";// 登录
 	private final String GET_IMAGE = "GET_IMAGE";// 获取图片
+	private final String SAVE_IMAGE_HOME = "SAVE_IMAGE_HOME";
 	private final String GET_PRAISE = "GET_PRAISE";// 获取赞列表
 	private final String SAVE_PRAISE = "SAVE_PRAISE";// 保存赞
 	private final String GET_COMMENT = "GET_COMMENT";// 获取评论列表
 	private final String SAVE_COMMENT = "SAVE_COMMENT";// 保存评论
-	
+	private final String SAVE_HOST_USER = "SAVE_HOST_USER";// 创建小程序的用户
+	private final String COPY_FILE = "COPY_FILE";// COPY_FILE
+	private final String GET_HOME_IMAGES = "GET_HOME_IMAGES";// GET_HOME_IMAGES
+	private final String SAVE_MAP_INFO = "SAVE_MAP_INFO";// 保存地图页信息
+	private final String GET_MAP_INFO = "GET_MAP_INFO";// GET_MAP_INFO
+	private final String SAVE_SHARE_INFO = "SAVE_SHARE_INFO";// SAVE_SHARE_INFO
+	private final String GET_SHARE_INFO = "GET_SHARE_INFO";// GET_SHARE_INFO
+	private final String SAVE_DETAIL_IMAGES = "SAVE_DETAIL_IMAGES";// SAVE_DETAIL_IMAGES
+	private final String GET_DETAIL_IMAGES = "GET_DETAIL_IMAGES";// GET_DETAIL_IMAGES
+	private final String GET_HOST_USER = "GET_HOST_USER";// 获取宿主用户
+	private final String SAVE_IMAGE_LOGO = "SAVE_IMAGE_LOGO";// SAVE_IMAGE_LOGO
+	private final String GET_IMAGE_LOGO = "GET_IMAGE_LOGO";// GET_IMAGE_LOGO
 
 	private JSONArray jsonArray = new JSONArray();
 	@Resource
 	private MobileService mobileService;
 	@Resource
 	private UserService userService;
-
 
 	public MobileService getMobileService() {
 		return mobileService;
@@ -94,15 +114,15 @@ public class MobileController {
 	 * @author wangpeng
 	 * @return
 	 * @throws Exception
-	 *
+	 * 
 	 */
-	//http://localhost:8080/party//mobile/mobileIn.do
-	//http://localhost:8080/party/wechat/image/arrow_chart.png
+	// http://localhost:8080/party//mobile/mobileIn.do
+	// http://localhost:8080/party/wechat/image/arrow_chart.png
 	@RequestMapping("mobileIn")
 	public String mobileIn(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
 		response.setContentType("application/json; charset=UTF-8");
-//		request.setCharacterEncoding("application/json; charset=UTF-8");
+		// request.setCharacterEncoding("application/json; charset=UTF-8");
 		HttpHeaderInfoBean headerInfoBean = HttpHeaderUtils
 				.getHeaderInfos(request);
 		if (ValidUtil.isEmpty(headerInfoBean.getMethod())) {
@@ -115,29 +135,65 @@ public class MobileController {
 			if (SAVE_USER.equals(method)) {
 				// 用户注册接口
 				json = saveUser(request, response);
-			}else if (GET_OPENID.equals(method)) {
+			} else if (GET_OPENID.equals(method)) {
 				// 获取openiD接口
 				json = getOpenID(request, response);
 			} else if (LOGIN_IN.equals(method)) {
 				// 用户登录方法
 				json = loginin(request, response);
-			}else if (GET_IMAGE.equals(method)) {
-				//  获取图片
+			} else if (GET_IMAGE.equals(method)) {
+				// 获取图片
 				json = getImages(request, response);
-			}else if (GET_PRAISE.equals(method)) {
-				//  获取赞列表
+			} else if (GET_PRAISE.equals(method)) {
+				// 获取赞列表
 				json = getPraiseList(request, response);
 			} else if (SAVE_PRAISE.equals(method)) {
 				// 点赞
 				json = savePraise(request, response);
-			}else if (SAVE_COMMENT.equals(method)) {
+			} else if (SAVE_COMMENT.equals(method)) {
 				// 保存评论
 				json = saveComment(request, response);
-			}else if (GET_COMMENT.equals(method)) {
+			} else if (GET_COMMENT.equals(method)) {
 				// 获取评论列表
 				json = getCommentList(request, response);
-			}
-			else{
+			} else if (SAVE_IMAGE_HOME.equals(method)) {
+				// 保存首页图片
+				json = saveHomeImage(request, response);
+			} else if (SAVE_HOST_USER.equals(method)) {
+				// 创建小程序的用户
+				json = saveHostUser(request, response);
+			} else if (COPY_FILE.equals(method)) {
+				json = copyFile(request, response);
+			} else if (GET_HOME_IMAGES.equals(method)) {
+				json = getHomeImages(request, response);
+			} else if (SAVE_MAP_INFO.equals(method)) {
+				// 保存地图页信息
+				json = saveMapInfo(request, response);
+			} else if (GET_MAP_INFO.equals(method)) {
+				// 获取地图页信息
+				json = getMapInfo(request, response);
+			} else if (SAVE_SHARE_INFO.equals(method)) {
+				// 保存分享图片
+				json = saveShareInfo(request, response);
+			} else if (GET_SHARE_INFO.equals(method)) {
+				// 获取分享信息
+				json = getShareInfo(request, response);
+			} else if (SAVE_DETAIL_IMAGES.equals(method)) {
+				// 保存图片详情
+				json = saveDetailImages(request, response);
+			} else if (GET_DETAIL_IMAGES.equals(method)) {
+				// 获取图片详情
+				json = getDetailImages(request, response);
+			} else if (GET_HOST_USER.equals(method)) {
+				// 获取宿主用户
+				json = getHostUser(request, response);
+			} else if (SAVE_IMAGE_LOGO.equals(method)) {
+				// 保存用户头像
+				json = saveImageLogo(request, response);
+			} else if (GET_IMAGE_LOGO.equals(method)) {
+				// 获取用户头像
+				json = getImageLogo(request, response);
+			} else {
 				json = "测试";
 			}
 
@@ -152,7 +208,575 @@ public class MobileController {
 		return null;
 	}
 
-	
+	/**
+	 * 获取用户头像
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	private String getImageLogo(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		String userId = request.getParameter("userId");
+		
+		if(null!=userId){
+			
+		List<UserLogo> detailImages = mobileService.getUserLogoByUserId(userId);
+		
+		return new Gson().toJson(detailImages);
+		
+		}
+		return "";
+	}
+
+	/**
+	 * 保存用户头像
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	private String saveImageLogo(HttpServletRequest request,
+			HttpServletResponse response) {
+		MultipartHttpServletRequest req = (MultipartHttpServletRequest) request;
+
+		MultipartFile multipartFile = req.getFile("file");
+
+		String userId = request.getParameter("userId");
+
+		String host = request.getParameter("host");
+
+		String id = request.getParameter("id");
+
+		String imgPath = System.getProperty("catalina.home") + "/userImg/"
+				+ userId + "/logo/";
+
+		try {
+			File file = new File(imgPath);
+
+			if (!file.exists()) {
+
+				file.mkdirs();
+			}
+
+			File fileImg = new File(imgPath, multipartFile
+					.getOriginalFilename());
+
+			List<UserLogo> detailImages = mobileService
+					.getUserLogoByUserId(userId);
+
+			SimpleDateFormat df = new SimpleDateFormat("yyyy年MM月dd日 HH点mm分");
+
+			if (null != detailImages) {
+				UserLogo detailImages2 = detailImages.get(0);
+				detailImages2.setId(detailImages2.getId());
+				detailImages2.setImgUrl(host + "/userImg/" + userId + "/logo/"
+						+ multipartFile.getOriginalFilename());
+				detailImages2.setUserId(detailImages2.getUserId());
+				detailImages2.setUpdateTime(df.format(new Date()));
+				mobileService.update(detailImages2);
+			} else {
+				UserLogo detaImages = new UserLogo();
+				detaImages.setId(id);
+				detaImages.setImgUrl(host + "/userImg/" + userId + "/logo/"
+						+ multipartFile.getOriginalFilename());
+				detaImages.setUserId(userId);
+				detaImages.setCreateTime(df.format(new Date()));
+
+				mobileService.save(detaImages);
+			}
+
+			multipartFile.transferTo(fileImg);
+
+			copyFile(request, userId);
+
+			return "保存成功";
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "保存失败";
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+			return "保存失败";
+		}
+	}
+
+	/**
+	 * 获取宿主用户
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	private String getHostUser(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		String openId = request.getParameter("openId");
+
+		Object hostUserById = userService.getHostUserById(openId);
+
+		if (null != hostUserById) {
+			return new Gson().toJson(hostUserById);
+		}
+
+		return "";
+	}
+
+	/**
+	 * 获取图片详情
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	private String getDetailImages(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		String bannerId = request.getParameter("bannerId");
+
+		List<DetailImages> detailImages = mobileService
+				.getDetailImagesByBannerId(bannerId);
+
+		return new Gson().toJson(detailImages);
+	}
+
+	/**
+	 * 保存图片详情
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	private String saveDetailImages(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		MultipartHttpServletRequest req = (MultipartHttpServletRequest) request;
+
+		MultipartFile multipartFile = req.getFile("file");
+
+		String userId = request.getParameter("userId");
+
+		String host = request.getParameter("host");
+
+		String bannerId = request.getParameter("bannerId");
+
+		String id = request.getParameter("id");
+
+		String desc = request.getParameter("desc");
+
+		String imgPath = System.getProperty("catalina.home") + "/userImg/"
+				+ userId + "/detailImages/" + bannerId + "/";
+
+		try {
+			File file = new File(imgPath);
+
+			if (!file.exists()) {
+
+				file.mkdirs();
+			}
+
+			File fileImg = new File(imgPath, multipartFile
+					.getOriginalFilename());
+
+			List<DetailImages> detailImages = mobileService
+					.getDetailImagesById(id);
+
+			SimpleDateFormat df = new SimpleDateFormat("yyyy年MM月dd日 HH点mm分");
+
+			if (null != detailImages) {
+				DetailImages detailImages2 = detailImages.get(0);
+				detailImages2.setUpdateTime(df.format(new Date()));
+				mobileService.update(detailImages2);
+			} else {
+				DetailImages detaImages = new DetailImages();
+				detaImages.setId(id);
+				detaImages.setImgUrl(host + "/userImg/" + userId
+						+ "/detailImages/" + bannerId + "/"
+						+ multipartFile.getOriginalFilename());
+				detaImages.setUserId(userId);
+				detaImages.setCreateTime(df.format(new Date()));
+				detaImages.setBannerId(bannerId);
+				detaImages.setDesc(desc);
+
+				mobileService.save(detaImages);
+			}
+
+			multipartFile.transferTo(fileImg);
+
+			copyFile(request, userId);
+
+			return "保存成功";
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "保存失败";
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+			return "保存失败";
+		}
+	}
+
+	/**
+	 * 获取分享信息
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	private String getShareInfo(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		String userId = request.getParameter("userId");
+
+		List hostObj = (List) mobileService.getShareInfoByUserId(userId);
+
+		return new Gson().toJson(hostObj);
+
+	}
+
+	/**
+	 * 保存分享图片
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	private String saveShareInfo(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		MultipartHttpServletRequest req = (MultipartHttpServletRequest) request;
+
+		MultipartFile multipartFile = req.getFile("file");
+
+		String userId = request.getParameter("userId");
+
+		String host = request.getParameter("host");
+
+		String imgPath = System.getProperty("catalina.home") + "/userImg/"
+				+ userId + "/share/";
+
+		try {
+			File file = new File(imgPath);
+
+			if (!file.exists()) {
+
+				file.mkdirs();
+			}
+
+			File fileImg = new File(imgPath, multipartFile
+					.getOriginalFilename());
+
+			ShareInfo shareBean = new ShareInfo();
+
+			List hostObj = (List) mobileService.getShareInfoByUserId(userId);
+
+			shareBean.setUserId(userId);
+
+			SimpleDateFormat df = new SimpleDateFormat("yyyy年MM月dd日 HH点mm分");
+
+			shareBean.setImgUrl(host + "/userImg/" + userId + "/share/"
+					+ multipartFile.getOriginalFilename());
+
+			if (null != hostObj) {
+				Object[] objs = (Object[]) hostObj.get(0);
+				shareBean.setId(objs[0] + "");
+				shareBean.setCreateTime(objs[3] + "");
+				shareBean.setUpdateTime(df.format(new Date()));
+				mobileService.update(shareBean);
+			} else {
+				shareBean.setId(getId());
+				shareBean.setCreateTime(df.format(new Date()));
+				mobileService.save(shareBean);
+			}
+
+			multipartFile.transferTo(fileImg);
+
+			copyFile(request, userId);
+
+			return "保存成功";
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "保存失败";
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+			return "保存失败";
+		}
+	}
+
+	/**
+	 * 获取地图页信息
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	private String getMapInfo(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		String userId = request.getParameter("userId");
+
+		List hostObj = (List) mobileService.getMapInfoByOpenId(userId);
+
+		return new Gson().toJson(hostObj);
+	}
+
+	/**
+	 * 保存地图页信息
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	private String saveMapInfo(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		MultipartHttpServletRequest req = (MultipartHttpServletRequest) request;
+
+		MultipartFile multipartFile = req.getFile("file");
+
+		String inviteName = request.getParameter("inviteName");
+
+		String inviteDateOne = request.getParameter("inviteDateOne");
+
+		String inviteDateTwo = request.getParameter("inviteDateTwo");
+
+		String inviteAddress = request.getParameter("inviteAddress");
+
+		String inviteLongitude = request.getParameter("inviteLongitude");
+
+		String inviteLatitude = request.getParameter("inviteLatitude");
+
+		String userId = request.getParameter("userId");
+
+		String host = request.getParameter("host");
+
+		String isOriginal = request.getParameter("isOriginal");
+
+		String imgPath = System.getProperty("catalina.home") + "/userImg/"
+				+ userId + "/map/";
+
+		try {
+			File file = new File(imgPath);
+
+			if (!file.exists()) {
+
+				file.mkdirs();
+			}
+
+			File fileImg = new File(imgPath, multipartFile
+					.getOriginalFilename());
+
+			MapInfo hostUser = new MapInfo();
+
+			List hostObj = (List) mobileService.getMapInfoByOpenId(userId);
+
+			hostUser.setUserId(userId);
+			hostUser.setInviteName(inviteName);
+			hostUser.setInviteAddress(inviteAddress);
+			hostUser.setInviteDateOne(inviteDateOne);
+			hostUser.setInviteDateTwo(inviteDateTwo);
+			hostUser.setInviteLatitude(inviteLatitude);
+			hostUser.setInviteLongitude(inviteLongitude);
+
+			SimpleDateFormat df = new SimpleDateFormat("yyyy年MM月dd日 HH点mm分");
+
+			hostUser.setIsOriginal(isOriginal);
+			hostUser.setInviteBgUrl(host + "/userImg/" + userId + "/map/"
+					+ multipartFile.getOriginalFilename());
+
+			if (null != hostObj) {
+				Object[] objs = (Object[]) hostObj.get(0);
+				hostUser.setId(objs[0] + "");
+				hostUser.setUpdateTime(df.format(new Date()));
+				mobileService.update(hostUser);
+			} else {
+				hostUser.setId(getId());
+				hostUser.setCreateTime(df.format(new Date()));
+				mobileService.save(hostUser);
+			}
+
+			multipartFile.transferTo(fileImg);
+
+			copyFile(request, userId);
+
+			return "保存成功";
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "保存失败";
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+			return "保存失败";
+		}
+	}
+
+	/**
+	 * 获取首页图片
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	private String getHomeImages(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		String openId = request.getParameter("openId");
+
+		List<Object> hostUser = (List<Object>) userService
+				.getHostUserById(openId);
+
+		if (null != hostUser && hostUser.size() > 0) {
+			// 已制作自己的小程序
+			List<ImageHomeBean> hostUserImgs = mobileService
+					.getHostUserImgs(openId);
+			if (null != hostUserImgs && hostUserImgs.size() > 0) {
+				return new Gson().toJson(hostUserImgs);
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * 保存首页图片
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	private String saveHomeImage(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		MultipartHttpServletRequest req = (MultipartHttpServletRequest) request;
+
+		MultipartFile multipartFile = req.getFile("file");
+
+		String userId = request.getParameter("userId");
+
+		String id = request.getParameter("id");
+
+		String title = request.getParameter("title");
+
+		String host = request.getParameter("host");
+
+		String imgPath = System.getProperty("catalina.home") + "/userImg/"
+				+ userId + "/";
+
+		try {
+			File file = new File(imgPath);
+
+			if (!file.exists()) {
+
+				file.mkdirs();
+			}
+
+			File fileImg = new File(imgPath, multipartFile
+					.getOriginalFilename());
+
+			ImageHomeBean imageHomeBean = new ImageHomeBean();
+			imageHomeBean.setId(id);
+			imageHomeBean.setImgUrl(host + "/userImg/" + userId + "/"
+					+ multipartFile.getOriginalFilename());
+			imageHomeBean.setTitle(title);
+			imageHomeBean.setUserId(userId);
+			imageHomeBean.setImageName(multipartFile.getOriginalFilename());
+
+			List userImage = mobileService.getUserImageById(id);
+
+			if (null == userImage) {
+				SimpleDateFormat df = new SimpleDateFormat("yyyy年MM月dd日 HH点mm分");
+				imageHomeBean.setCreateTime(df.format(new Date()));
+				mobileService.save(imageHomeBean);
+			} else {
+				SimpleDateFormat df = new SimpleDateFormat("yyyy年MM月dd日 HH点mm分");
+				imageHomeBean.setUpdateTime(df.format(new Date()));
+				mobileService.update(imageHomeBean);
+			}
+
+			multipartFile.transferTo(fileImg);
+
+			copyFile(request, userId);
+
+			return "保存成功";
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "保存失败";
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+			return "保存失败";
+		}
+	}
+
+	/**
+	 * 图片文件复制
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public String copyFile(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		String openId = request.getParameter("openId");
+
+		String copyNewPath = request.getSession().getServletContext()
+				.getRealPath("/")
+				+ "/userImg/" + openId + "/";
+		String dirPath = System.getProperty("catalina.home") + "/userImg/"
+				+ openId + "/";
+
+		try {
+			File file = new File(copyNewPath);
+			File dir = new File(dirPath);
+			if (!dir.exists()) {
+				return "未创建";
+			}
+			if (!file.exists()) {
+				FileUtils.copy(dirPath, copyNewPath);
+			} else {
+				return "已存在";
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "复制失败";
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "复制成功";
+
+	}
+
+	/**
+	 * 图片文件复制
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public String copyFile(HttpServletRequest request, String openId) {
+
+		String copyNewPath = request.getSession().getServletContext()
+				.getRealPath("/")
+				+ "/userImg/" + openId + "/";
+		String dirPath = System.getProperty("catalina.home") + "/userImg/"
+				+ openId + "/";
+
+		try {
+			FileUtils.copy(dirPath, copyNewPath);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "复制失败";
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "复制成功";
+
+	}
 
 	/**
 	 * 保存赞
@@ -166,22 +790,30 @@ public class MobileController {
 		String nickName = request.getParameter("nickName");
 		String nickImage = request.getParameter("nickImage");
 		String openId = request.getParameter("openId");
+		String hostUserId = request.getParameter("hostUserId");
 		try {
-			List obj;
-			if (null!=openId && !"".equals(openId)) {
-				obj = mobileService.getBlessUserByOpenId(openId);
-			}else {
-				obj = mobileService.getBlessUserByNickImage(nickImage);
+			List obj = null;
+			if (null != openId && !"".equals(openId)) {
+				if (null != hostUserId && !"".equals(hostUserId)) {
+					obj = mobileService
+							.getBlessUserByOpenId(openId, hostUserId);
+				} else {
+					obj = mobileService.getBlessUserByOpenId(openId);
+				}
+
+			} else {
+				return "点赞失败";
 			}
-			if (null!=obj && obj.size()>0) {
+			if (null != obj && obj.size() > 0) {
 				return "你已经点过赞了";
 			}
 			BlessUser blessUser = new BlessUser();
-			blessUser.setNick_image(nickImage+"");
-			blessUser.setNick_name(nickName+"");
-			blessUser.setCreate_time(System.currentTimeMillis()+"");
-			blessUser.setId(System.currentTimeMillis()+"");
+			blessUser.setNick_image(nickImage + "");
+			blessUser.setNick_name(nickName + "");
+			blessUser.setCreate_time(System.currentTimeMillis() + "");
+			blessUser.setId(System.currentTimeMillis() + "");
 			blessUser.setOpen_id(openId);
+			blessUser.setUser_id(hostUserId);
 			mobileService.save(blessUser);
 			return "点赞成功";
 		} catch (Exception e) {
@@ -199,30 +831,37 @@ public class MobileController {
 	 */
 	private String saveComment(HttpServletRequest request,
 			HttpServletResponse response) {
-		
+
 		String nickName = request.getParameter("nickName");
 		String nickImage = request.getParameter("nickImage");
 		String comment = request.getParameter("comment");
 		String time = request.getParameter("time");
 		String openId = request.getParameter("openId");
-		
+		String hostUserId = request.getParameter("hostUserId");
+
 		try {
-			BlessComment blessComment = new BlessComment();
-			blessComment.setNick_image(nickImage+"");
-			blessComment.setNick_name(nickName+"");
-			blessComment.setComment(comment+"");
-			blessComment.setOpen_id(openId+"");
-			SimpleDateFormat df = new SimpleDateFormat("yyyy年MM月dd日 HH点mm分"); 
-			blessComment.setCreate_time(df.format(new Date()));
-			blessComment.setId(System.currentTimeMillis()+"");
-			mobileService.save(blessComment);
-			return "评论成功";
+			if (null != hostUserId && !"".equals(hostUserId)) {
+				BlessComment blessComment = new BlessComment();
+				blessComment.setNick_image(nickImage + "");
+				blessComment.setNick_name(nickName + "");
+				blessComment.setComment(comment + "");
+				blessComment.setOpen_id(openId + "");
+				SimpleDateFormat df = new SimpleDateFormat("yyyy年MM月dd日 HH点mm分");
+				blessComment.setCreate_time(df.format(new Date()));
+				blessComment.setId(System.currentTimeMillis() + "");
+				blessComment.setUser_id(hostUserId);
+				mobileService.save(blessComment);
+				return "评论成功";
+			} else {
+				return "评论失败";
+			}
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return "评论失败";
 	}
-	
+
 	/**
 	 * 获取赞列表
 	 * 
@@ -232,16 +871,23 @@ public class MobileController {
 	 */
 	private String getPraiseList(HttpServletRequest request,
 			HttpServletResponse response) {
+
+		String userId = request.getParameter("userId");
 		List object;
 		try {
-			 object = mobileService.getAllBlessUser();
-				return new Gson().toJson(object);
+			if (null != userId) {
+				object = mobileService.getAllBlessUser(userId);
+			} else {
+				object = mobileService.getAllBlessUser();
+			}
+			return new Gson().toJson(object);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return "";
 
 	}
+
 	/**
 	 * 获取评论列表
 	 * 
@@ -251,16 +897,22 @@ public class MobileController {
 	 */
 	private String getCommentList(HttpServletRequest request,
 			HttpServletResponse response) {
+
+		String userId = request.getParameter("userId");
 		List object;
 		try {
-			 object = mobileService.getAllBlessComment();
-				return new Gson().toJson(object);
+			if (null != userId) {
+				object = mobileService.getAllBlessComment(userId);
+			} else {
+				object = mobileService.getAllBlessComment();
+			}
+			return new Gson().toJson(object);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return "";
 	}
-	
+
 	/**
 	 * 获取图片
 	 * 
@@ -270,54 +922,58 @@ public class MobileController {
 	 */
 	public String getImages(HttpServletRequest request,
 			HttpServletResponse response) {
-		
-		String type = request.getParameter("homeType");//banner detail
+
+		String type = request.getParameter("homeType");// banner detail
 		String moduleId = request.getParameter("moduleId");
 
 		List<ImageList> imageList = new ArrayList<ImageList>();
 		String baseUrl = "";
 		try {
-		
+
 			String path = "";
 			if ("banner".equals(type)) {
-				path = request.getSession().getServletContext().getRealPath("/wechat")+"/marry/banner/";
+				path = request.getSession().getServletContext().getRealPath(
+						"/wechat")
+						+ "/marry/banner/";
 				baseUrl = "https://pengmaster.com/party/wechat/marry/banner/";
-			}else {
-				path = request.getSession().getServletContext().getRealPath("/wechat")+"/marry/"+moduleId+"/";
-				baseUrl = "https://pengmaster.com/party/wechat"+"/marry/"+moduleId+"/";
+			} else {
+				path = request.getSession().getServletContext().getRealPath(
+						"/wechat")
+						+ "/marry/" + moduleId + "/";
+				baseUrl = "https://pengmaster.com/party/wechat" + "/marry/"
+						+ moduleId + "/";
 			}
-			System.out.println("path:"+path);
+			System.out.println("path:" + path);
 			File file = new File(path);
 			File[] tempList = file.listFiles();
-			if (null==tempList) {
+			if (null == tempList) {
 				return "数据为空";
 			}
-			for(int i=0;i<tempList.length;i++){
+			for (int i = 0; i < tempList.length; i++) {
 				String name = tempList[i].getName();
 				String orientation = "";
-				File picture = new File(path+name);
-		        BufferedImage sourceImg =ImageIO.read(new FileInputStream(picture)); 
-		         if (sourceImg.getWidth()>sourceImg.getHeight()) {
-		        	 orientation = "horizontal";
-				}else {
-					 orientation = "vertical";
+				File picture = new File(path + name);
+				BufferedImage sourceImg = ImageIO.read(new FileInputStream(
+						picture));
+				if (sourceImg.getWidth() > sourceImg.getHeight()) {
+					orientation = "horizontal";
+				} else {
+					orientation = "vertical";
 				}
-		         String nameType = "";
-		         if (null!=name) {
-		        	 nameType = name.substring(0,name.indexOf("."));
+				String nameType = "";
+				if (null != name) {
+					nameType = name.substring(0, name.indexOf("."));
 				}
-				imageList.add(new ImageList(StringUtils.generateRefID()
-						, baseUrl+name, nameType, orientation));
+				imageList.add(new ImageList(StringUtils.generateRefID(),
+						baseUrl + name, nameType, orientation));
 			}
-	
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	
+
 		return new Gson().toJson(imageList);
 	}
- 
-
 
 	/**
 	 * 用户注册
@@ -327,13 +983,13 @@ public class MobileController {
 	 */
 	public String saveUser(HttpServletRequest request,
 			HttpServletResponse response) {
-		
+
 		String openId = request.getParameter("openId");
 		String userInfos = request.getParameter("userInfo");
 		Gson gson = new Gson();
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// 格式化到秒
 		try {
-			//用户操作记录
+			// 用户操作记录
 			UserRecord userRecord = new UserRecord();
 			userRecord.setId(getId());
 			userRecord.setOpenId(openId);
@@ -344,43 +1000,122 @@ public class MobileController {
 			userRecord.setProvince(userInfo.getProvince());
 			userRecord.setCreateTime(formatter.format(new Date()));
 			userService.saveUserRecord(userRecord);
-			
-			if (null!=openId && !"".equals(openId)) {
+
+			if (null != openId && !"".equals(openId)) {
 				Object userOlderList = userService.getUserById(openId);
-				if (null!=userOlderList) {
-					List<Object> list = (List<Object>)userOlderList;
-					if (list.size()>0 && null!=list.get(0) && list.get(0) instanceof Object[]) {
-						Object[] listResult = (Object[])list.get(0);
+				if (null != userOlderList) {
+					List<Object> list = (List<Object>) userOlderList;
+					if (list.size() > 0 && null != list.get(0)
+							&& list.get(0) instanceof Object[]) {
+						Object[] listResult = (Object[]) list.get(0);
 						User user = new User();
-						user.setId(listResult[0]+"");
-						user.setOpenId(listResult[1]+"");
-						user.setAvatarUrl(listResult[2]+"");
-						user.setCity(listResult[3]+"");
-						user.setNickName(listResult[4]+"");
-						user.setProvince(listResult[5]+"");
-						user.setCreateTime(listResult[6]+"");
+						user.setId(listResult[0] + "");
+						user.setOpenId(listResult[1] + "");
+						user.setAvatarUrl(listResult[2] + "");
+						user.setCity(listResult[3] + "");
+						user.setNickName(listResult[4] + "");
+						user.setProvince(listResult[5] + "");
+						user.setCreateTime(listResult[6] + "");
 						user.setUpdateTime(formatter.format(new Date()));
 						userService.updateUser(user);
-						System.out.println("--------------update_user_success------------");
+						System.out
+								.println("--------------update_user_success------------");
 						return "更新成功";
+					} else {
+						User user = new User();
+						user.setId(getId());
+						user.setOpenId(openId);
+						user.setAvatarUrl(userInfo.getAvatarUrl());
+						user.setCity(userInfo.getCity());
+						user.setNickName(userInfo.getNickName());
+						user.setProvince(userInfo.getProvince());
+						user.setCreateTime(formatter.format(new Date()));
+						userService.saveUser(user);
+						System.out
+								.println("--------------save_user_success------------");
+						return "保存成功";
 					}
 				}
 			}
-			User user = new User();
-			user.setId(getId());
-			user.setOpenId(openId);
-			user.setAvatarUrl(userInfo.getAvatarUrl());
-			user.setCity(userInfo.getCity());
-			user.setNickName(userInfo.getNickName());
-			user.setProvince(userInfo.getProvince());
-			user.setCreateTime(formatter.format(new Date()));
-			userService.saveUser(user);
-			System.out.println("--------------save_user_success------------");
-			return "保存成功";
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			return "保存失败";
 		}
+		return "保存成功";
+	}
+
+	/**
+	 * 保存创建自己小程序的用户
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public String saveHostUser(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		String openId = request.getParameter("openId");
+		String userInfos = request.getParameter("userInfo");
+		String isOriginal = request.getParameter("isOriginal");
+		String userPhone = request.getParameter("userPhone");
+		String userWechat = request.getParameter("userWechat");
+		Gson gson = new Gson();
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// 格式化到秒
+		try {
+
+			if (null != openId && !"".equals(openId)) {
+				Object userOlderList = userService.getHostUserById(openId);
+				if (null != userOlderList) {
+					List<Object> list = (List<Object>) userOlderList;
+					if (list.size() > 0 && null != list.get(0)
+							&& list.get(0) instanceof Object[]) {
+						Object[] listResult = (Object[]) list.get(0);
+						HostUser user = new HostUser();
+						user.setId(listResult[0] + "");
+						user.setOpenId(listResult[1] + "");
+						user.setAvatarUrl(listResult[2] + "");
+						user.setCity(listResult[3] + "");
+						user.setNickName(listResult[4] + "");
+						user.setProvince(listResult[5] + "");
+						user.setCreateTime(listResult[6] + "");
+						user.setUserPhone(listResult[7] + "");
+						user.setUserWechat(listResult[8] + "");
+						user.setUpdateTime(formatter.format(new Date()));
+						user.setIsOriginal(isOriginal);
+						userService.updateUser(user);
+						System.out
+								.println("--------------update_user_success------------");
+						return "更新成功";
+					} else {
+						UserInfo userInfo = gson.fromJson(userInfos,
+								UserInfo.class);
+						HostUser user = new HostUser();
+						user.setId(getId());
+						user.setOpenId(openId);
+						user.setAvatarUrl(userInfo.getAvatarUrl());
+						user.setCity(userInfo.getCity());
+						user.setNickName(userInfo.getNickName());
+						user.setProvince(userInfo.getProvince());
+						user.setCreateTime(formatter.format(new Date()));
+						user.setUserPhone(userPhone);
+						user.setUserWechat(userWechat);
+						user.setIsOriginal(isOriginal);
+						userService.saveUser(user);
+						System.out
+								.println("--------------save_user_success------------");
+						return "保存成功";
+					}
+				}
+			} else {
+				return "请重新授权小程序";
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "保存失败";
+		}
+		return "保存成功";
 	}
 
 	/**
@@ -435,7 +1170,6 @@ public class MobileController {
 		return JsonObject.toString();
 	}
 
-
 	/**
 	 * 获取openid
 	 * 
@@ -464,15 +1198,15 @@ public class MobileController {
 			// String access_token = (String) oppidObj.get("access_token");
 			String openid = (String) oppidObj.get("openid");
 			if (openid != null && !"".equals(openid)) {
-//				User user = userService.getUserByOpenId(openid);
-//				if (user == null) {
-//					JsonObject.put("flag", false);
-//					JsonObject.put("openid", openid);
-//				} else {
-//					JsonObject.put("flag", true);
-//					JsonObject.put("openid", openid);
-//					JsonObject.put("user", user);
-//				}
+				// User user = userService.getUserByOpenId(openid);
+				// if (user == null) {
+				// JsonObject.put("flag", false);
+				// JsonObject.put("openid", openid);
+				// } else {
+				// JsonObject.put("flag", true);
+				// JsonObject.put("openid", openid);
+				// JsonObject.put("user", user);
+				// }
 				JsonObject.put("flag", true);
 				JsonObject.put("openid", openid);
 			} else {
@@ -489,30 +1223,21 @@ public class MobileController {
 		}
 	}
 
-    /** 
-     * @描述 java生成流水号  
-     * 14位时间戳 + 6位随机数 
-     * @作者 shaomy 
-     * @时间:2017-1-12 上午10:10:41 
-     * @参数:@return  
-     * @返回值：String 
-     */ 
-	   public static String getId(){  
-        String id=""; 
-        //获取当前时间戳		
-        SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");  
-        String temp = sf.format(new Date());  
-	       //获取6位随机数
-        int random=(int) ((Math.random()+1)*100000);  
-        id=temp+random;  
-        return id;  
-    } 
+	/**
+	 * @描述 java生成流水号 14位时间戳 + 6位随机数
+	 * @作者 shaomy
+	 * @时间:2017-1-12 上午10:10:41
+	 * @参数:@return
+	 * @返回值：String
+	 */
+	public static String getId() {
+		String id = "";
+		// 获取当前时间戳
+		SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");
+		String temp = sf.format(new Date());
+		// 获取6位随机数
+		int random = (int) ((Math.random() + 1) * 100000);
+		id = temp + random;
+		return id;
+	}
 }
-
-
-
-
-
-
-
-

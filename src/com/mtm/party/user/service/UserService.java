@@ -1,19 +1,17 @@
 package com.mtm.party.user.service;
 
-import java.util.List;
-
 import javax.annotation.Resource;
-
 
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.mtm.party.user.model.User;
-import com.mtm.party.user.model.UserRecord;
-
 import cn.mtm2000.common.hibernate.HibernateDao;
 import cn.mtm2000.common.hibernate.QlBuilder;
+
+import com.mtm.party.user.model.HostUser;
+import com.mtm.party.user.model.User;
+import com.mtm.party.user.model.UserRecord;
 
 /**
  * @author qubin
@@ -84,7 +82,20 @@ public class UserService {
 	public void updateUser(User user){
 		dao.update(user);
 	}
-	
+	/**
+	 * 宿主用户
+	 * @param user
+	 */
+	public void updateUser(HostUser user){
+		dao.update(user);
+	}
+	/**
+	 * 宿主用户
+	 * @param user
+	 */
+	public void saveUser(HostUser user){
+		dao.save(user);
+	}
 	/**
 	 * 根据身份证号、手机号获取user
 	 * @param account
@@ -123,7 +134,22 @@ public class UserService {
 		}
 		return o;
 	}
-	
+	/**
+	 * 根据ID获取ostUser
+	 * @param userId
+	 * @return
+	 */
+	public Object getHostUserById(String openId) {
+		QlBuilder s = new QlBuilder();
+		Object o = null;
+		s.segment("select * from T_HOST_USER u where u.openId=");;
+		s.value(openId);
+		o = dao.listBySql(s);
+		if (o == null) {
+			return null;
+		}
+		return o;
+	}
 	/**
 	 * 获取所有用户信息
 	 * @param userId

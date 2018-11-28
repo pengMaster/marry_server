@@ -7,8 +7,16 @@ public class BlessUser {
 	private String open_id; 
 	private String nick_image;
 	private String nick_name;
+	private String user_id;
 	
 	
+	
+	public String getUser_id() {
+		return user_id;
+	}
+	public void setUser_id(String userId) {
+		user_id = userId;
+	}
 	public String getId() {
 		return id;
 	}
