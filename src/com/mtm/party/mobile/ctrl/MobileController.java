@@ -802,14 +802,19 @@ public class MobileController {
 				}
 
 			} else {
-				return "点赞失败";
+				if(null != nickImage && !"".equals(nickImage)){
+					obj = mobileService.getBlessUserByNickImage(nickImage);
+				}else {
+					return "点赞失败";
+				}
+				
 			}
 			if (null != obj && obj.size() > 0) {
 				return "你已经点过赞了";
 			}
 			BlessUser blessUser = new BlessUser();
 			blessUser.setNick_image(nickImage + "");
-			blessUser.setNick_name(nickName + "");
+			blessUser.setNick_name(filter(nickName) + "");
 			blessUser.setCreate_time(System.currentTimeMillis() + "");
 			blessUser.setId(System.currentTimeMillis() + "");
 			blessUser.setOpen_id(openId);
@@ -843,7 +848,7 @@ public class MobileController {
 			if (null != hostUserId && !"".equals(hostUserId)) {
 				BlessComment blessComment = new BlessComment();
 				blessComment.setNick_image(nickImage + "");
-				blessComment.setNick_name(nickName + "");
+				blessComment.setNick_name(filter(nickName) + "");
 				blessComment.setComment(comment + "");
 				blessComment.setOpen_id(openId + "");
 				SimpleDateFormat df = new SimpleDateFormat("yyyy年MM月dd日 HH点mm分");
@@ -994,10 +999,10 @@ public class MobileController {
 			userRecord.setId(getId());
 			userRecord.setOpenId(openId);
 			UserInfo userInfo = gson.fromJson(userInfos, UserInfo.class);
-			userRecord.setAvatarUrl(userInfo.getAvatarUrl());
-			userRecord.setCity(userInfo.getCity());
-			userRecord.setNickName(userInfo.getNickName());
-			userRecord.setProvince(userInfo.getProvince());
+			userRecord.setAvatarUrl(userInfo.getAvatarUrl()+"");
+			userRecord.setCity(userInfo.getCity()+"");
+			userRecord.setNickName(filter(userInfo.getNickName())+"");
+			userRecord.setProvince(userInfo.getProvince()+"");
 			userRecord.setCreateTime(formatter.format(new Date()));
 			userService.saveUserRecord(userRecord);
 
@@ -1027,7 +1032,7 @@ public class MobileController {
 						user.setOpenId(openId);
 						user.setAvatarUrl(userInfo.getAvatarUrl());
 						user.setCity(userInfo.getCity());
-						user.setNickName(userInfo.getNickName());
+						user.setNickName(filter(userInfo.getNickName()));
 						user.setProvince(userInfo.getProvince());
 						user.setCreateTime(formatter.format(new Date()));
 						userService.saveUser(user);
@@ -1095,7 +1100,7 @@ public class MobileController {
 						user.setOpenId(openId);
 						user.setAvatarUrl(userInfo.getAvatarUrl());
 						user.setCity(userInfo.getCity());
-						user.setNickName(userInfo.getNickName());
+						user.setNickName(filter(userInfo.getNickName()));
 						user.setProvince(userInfo.getProvince());
 						user.setCreateTime(formatter.format(new Date()));
 						user.setUserPhone(userPhone);
@@ -1184,11 +1189,11 @@ public class MobileController {
 			String code = request.getParameter("code");
 			String appid = request.getParameter("appid");
 			String secret = request.getParameter("secret");
-			String requestUrl = "https://api.weixin.qq.com/sns/oauth2/access_token?appid="
+			String requestUrl = "https://api.weixin.qq.com/sns/jscode2session?appid="
 					+ appid
 					+ "&secret="
 					+ secret
-					+ "&code="
+					+ "&js_code="
 					+ code
 					+ "&grant_type=authorization_code";
 			// 第一次请求 获取access_token 和 openid
@@ -1239,5 +1244,19 @@ public class MobileController {
 		int random = (int) ((Math.random() + 1) * 100000);
 		id = temp + random;
 		return id;
+	}
+	
+	public String filter(String content) {
+		byte[] conbyte = content.getBytes();
+        for (int i = 0; i < conbyte.length; i++) {
+            if ((conbyte[i] & 0xF8) == 0xF0) {
+                for (int j = 0; j < 4; j++) {                          
+                    conbyte[i+j]=0x30;                     
+                }  
+                i += 3;
+            }
+        }
+        content = new String(conbyte);
+        return content.replaceAll("0000", "");
 	}
 }
