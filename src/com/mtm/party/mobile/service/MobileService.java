@@ -1,10 +1,14 @@
 package com.mtm.party.mobile.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.mchange.v2.log.LogUtils;
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -266,7 +270,34 @@ public class MobileService {
 			return null;
 		}
 	}
-	
+	/**
+	 * 根据id获取imgs
+	 * @param images
+	 * @return
+	 */
+	public void deleteDetailImages(DetailImages images){
+		dao.delete(images);
+	}
+	/**
+	 * 根据id获取imgs
+	 * @param images
+	 * @return
+	 */
+	public void deleteItemImages(ImageHomeBean images){
+		dao.delete(images);
+	}
+
+	/**
+	 * 根据id获取imgs
+	 * @param id
+	 * @return
+	 */
+	public void deleteDetailImagesById(String id){
+		String sql = "delete FROM T_DETAIL_IMAGES where banner_id='" + id+"'";
+		Session session = template.getSessionFactory().getCurrentSession();
+		SQLQuery query = session.createSQLQuery(sql);
+		query.executeUpdate();
+	}
 	/**
 	 * 根据id获取imgs
 	 * @param id

@@ -1,0 +1,114 @@
+<component name="ArtifactManager">
+  <artifact type="exploded-war" name="party:war exploded">
+    <output-path>$PROJECT_DIR$/classes/artifacts/party_war_exploded</output-path>
+    <root id="root">
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="classes">
+          <element id="module-output" name="party" />
+        </element>
+        <element id="directory" name="lib">
+          <element id="library" level="module" name="activation-1.1.1.jar" module-name="party" />
+          <element id="library" level="module" name="antlr-2.7.6.jar" module-name="party" />
+          <element id="library" level="module" name="aopalliance-1.0.jar" module-name="party" />
+          <element id="library" level="module" name="aspectjweaver.jar" module-name="party" />
+          <element id="library" level="module" name="bottle1.0.jar" module-name="party" />
+          <element id="library" level="module" name="c3p0-0.9.1.jar" module-name="party" />
+          <element id="library" level="module" name="cglib-2.2.jar" module-name="party" />
+          <element id="library" level="module" name="com.springsource.org.apache.commons.fileupload-1.2.0.jar" module-name="party" />
+          <element id="library" level="module" name="commons-beanutils-1.7.jar" module-name="party" />
+          <element id="library" level="module" name="commons-cli-1.2.jar" module-name="party" />
+          <element id="library" level="module" name="commons-codec-1.4.jar" module-name="party" />
+          <element id="library" level="module" name="commons-collections-3.1.jar" module-name="party" />
+          <element id="library" level="module" name="commons-dbcp.jar" module-name="party" />
+          <element id="library" level="module" name="commons-fileupload-1.2.2.jar" module-name="party" />
+          <element id="library" level="module" name="commons-io-2.4.jar" module-name="party" />
+          <element id="library" level="module" name="commons-logging-api-1.1.jar" module-name="party" />
+          <element id="library" level="module" name="commons-pool.jar" module-name="party" />
+          <element id="library" level="module" name="dom4j-1.6.1.jar" module-name="party" />
+          <element id="library" level="module" name="ehcache-1.2.3.jar" module-name="party" />
+          <element id="library" level="module" name="ezmorph-1.0.6.jar" module-name="party" />
+          <element id="library" level="module" name="fastjson-1.2.24.jar" module-name="party" />
+          <element id="library" level="module" name="freemarker2.3.20.jar" module-name="party" />
+          <element id="library" level="module" name="hibernate-cglib-repack-2.1_3.jar" module-name="party" />
+          <element id="library" level="module" name="hibernate3.jar" module-name="party" />
+          <element id="library" level="module" name="iReport.jar" module-name="party" />
+          <element id="library" level="module" name="itext-2.0.6.jar" module-name="party" />
+          <element id="library" level="module" name="iText-2.1.7.jar" module-name="party" />
+          <element id="library" level="module" name="itext-rtf-2.1.7.jar" module-name="party" />
+          <element id="library" level="module" name="iTextAsian.jar" module-name="party" />
+          <element id="library" level="module" name="itextpdf-5.5.5.jar" module-name="party" />
+          <element id="library" level="module" name="jackson-core-asl-1.9.12.jar" module-name="party" />
+          <element id="library" level="module" name="jackson-databind-2.3.2.jar" module-name="party" />
+          <element id="library" level="module" name="jackson-jaxrs-1.9.11.jar" module-name="party" />
+          <element id="library" level="module" name="javassist-3.4.GA.jar" module-name="party" />
+          <element id="library" level="module" name="javassist-3.9.0.GA.jar" module-name="party" />
+          <element id="library" level="module" name="jboss-cache-1.4.1.GA.jar" module-name="party" />
+          <element id="library" level="module" name="jbosscache-core-3.1.0.GA.jar" module-name="party" />
+          <element id="library" level="module" name="jodconverter-2.2.2.jar" module-name="party" />
+          <element id="library" level="module" name="jodconverter-cli-2.2.2.jar" module-name="party" />
+          <element id="library" level="module" name="json-lib-2.4-jdk15.jar" module-name="party" />
+          <element id="library" level="module" name="jta-1.1.jar" module-name="party" />
+          <element id="library" level="module" name="jtidy-4aug2000r7-dev.jar" module-name="party" />
+          <element id="library" level="module" name="juh-3.0.1.jar" module-name="party" />
+          <element id="library" level="module" name="jurt-3.0.1.jar" module-name="party" />
+          <element id="library" level="module" name="log4j-1.2.11.jar" module-name="party" />
+          <element id="library" level="module" name="mail-1.4.1.jar" module-name="party" />
+          <element id="library" level="module" name="mtmcomm0.1.jar" module-name="party" />
+          <element id="library" level="module" name="mysql-connector-java-5.0.4-bin.jar" module-name="party" />
+          <element id="library" level="module" name="ojdbc14-10.2.0.3.0.jar" module-name="party" />
+          <element id="library" level="module" name="org.apache.commons.lang.jar" module-name="party" />
+          <element id="library" level="module" name="org.springframework.web.servlet-3.0.5.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="oscache-2.1.jar" module-name="party" />
+          <element id="library" level="module" name="pageoffice.jar" module-name="party" />
+          <element id="library" level="module" name="poi-3.7-20101029.jar" module-name="party" />
+          <element id="library" level="module" name="poi-examples-3.7-20101029.jar" module-name="party" />
+          <element id="library" level="module" name="poi-ooxml-3.7-20101029.jar" module-name="party" />
+          <element id="library" level="module" name="poi-ooxml-schemas-3.7-20101029.jar" module-name="party" />
+          <element id="library" level="module" name="proxool-0.8.3.jar" module-name="party" />
+          <element id="library" level="module" name="render-1.0.jar" module-name="party" />
+          <element id="library" level="module" name="ridl-3.0.1.jar" module-name="party" />
+          <element id="library" level="module" name="slf4j-api-1.5.8.jar" module-name="party" />
+          <element id="library" level="module" name="slf4j-log4j12-1.5.8.jar" module-name="party" />
+          <element id="library" level="module" name="spring-aop-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-aspects-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-beans-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-context-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-context-support-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-core-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-expression-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-instrument-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-instrument-tomcat-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-jdbc-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-jms-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-messaging-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-orm-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-oxm-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-test-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-tx-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-web-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-webmvc-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-webmvc-portlet-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="spring-websocket-4.1.1.RELEASE.jar" module-name="party" />
+          <element id="library" level="module" name="standard.jar" module-name="party" />
+          <element id="library" level="module" name="swarmcache-1.0RC2.jar" module-name="party" />
+          <element id="library" level="module" name="Tidy.jar" module-name="party" />
+          <element id="library" level="module" name="unoil-3.0.1.jar" module-name="party" />
+          <element id="library" level="module" name="xfire-aegis-1.2.6.jar" module-name="party" />
+          <element id="library" level="module" name="xfire-annotations-1.2.6.jar" module-name="party" />
+          <element id="library" level="module" name="xfire-core-1.2.6.jar" module-name="party" />
+          <element id="library" level="module" name="xfire-java5-1.2.6.jar" module-name="party" />
+          <element id="library" level="module" name="xfire-jaxws-1.2.6.jar" module-name="party" />
+          <element id="library" level="module" name="xfire-jsr181-api-1.0-M1.jar" module-name="party" />
+          <element id="library" level="module" name="xfire-spring-1.2.6.jar" module-name="party" />
+          <element id="library" level="module" name="xmlworker-1.2.1-micmiu.jar" module-name="party" />
+          <element id="library" level="module" name="xstream-1.3.1.jar" module-name="party" />
+          <element id="library" level="module" name="gson-2.1.jar" module-name="party" />
+          <element id="library" level="module" name="jdom-1.0.jar" module-name="party" />
+          <element id="library" level="module" name="thumbnailator-0.4.2-all.jar" module-name="party" />
+          <element id="library" level="module" name="jsoup-1.10.2.jar" module-name="party" />
+        </element>
+      </element>
+      <element id="javaee-facet-resources" facet="party/web/Web" />
+    </root>
+  </artifact>
+</component>
