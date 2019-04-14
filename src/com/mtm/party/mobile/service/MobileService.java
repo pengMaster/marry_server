@@ -209,6 +209,17 @@ public class MobileService {
 			return null;
 		}
 	}
+
+	public List getStatus(){
+		QlBuilder ql=new QlBuilder();
+		ql.segment(" select * FROM t_status");
+		List obj = dao.listBySql(ql);
+		if (null !=obj && obj.size()>0) {
+			return obj;
+		}else{
+			return null;
+		}
+	}
 	/**
 	 * 根据openid获取imgs
 	 * @param openId

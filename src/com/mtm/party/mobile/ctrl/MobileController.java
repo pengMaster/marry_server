@@ -79,6 +79,7 @@ public class MobileController {
     private final String GET_IMAGE_LOGO = "GET_IMAGE_LOGO";// GET_IMAGE_LOGO
     private final String DELETE_DETAIL_IMAGES = "DELETE_DETAIL_IMAGES";// DELETE_DETAIL_IMAGES
     private final String DELETE_ITEM_IMAGES = "DELETE_ITEM_IMAGES";// DELETE_ITEM_IMAGES
+    private final String isHide = "isHide";// isHide
 
     private JSONArray jsonArray = new JSONArray();
     @Resource
@@ -195,11 +196,14 @@ public class MobileController {
                 // 获取用户头像
                 json = getImageLogo(request, response);
             } else if (DELETE_DETAIL_IMAGES.equals(method)) {
-                // 获取用户头像
+                // 删除详情图片
                 json = deleteDetailImage(request, response);
             } else if (DELETE_ITEM_IMAGES.equals(method)) {
-                // 获取用户头像
+                // 删除单个模块
                 json = deleteItemImage(request, response);
+            } else if (isHide.equals(method)) {
+                // 是否隐藏信息
+                json = hideContent(request, response);
             } else {
                 json = "测试";
             }
@@ -215,6 +219,27 @@ public class MobileController {
         return null;
     }
 
+    private String hideContent(HttpServletRequest request, HttpServletResponse response) {
+
+        try {
+            List statusLists = mobileService.getStatus();
+
+            if (null == statusLists)
+                return "error";
+            String status = statusLists.get(0).toString();
+            if ("0".equals(status)) {
+                return "no";
+            } else if ("1".equals(status)) {
+                return "yes";
+            } else {
+                return "error";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "yes";
+        }
+    }
+
     /**
      * 删除详情单个模块
      *
@@ -225,11 +250,14 @@ public class MobileController {
     private String deleteItemImage(HttpServletRequest request, HttpServletResponse response) {
 
         String itemJson = request.getParameter("itemJson");
+        String hostUserId = request.getParameter("hostUserId");
         try {
             ImageHomeBean imageHomeBean = new Gson().fromJson(itemJson, ImageHomeBean.class);
             if (null == imageHomeBean)
                 return "error";
-            mobileService.deleteItemImages(imageHomeBean);
+            if (!hostUserId .equals(imageHomeBean.getUserId())) {
+                return "notYou";
+            }
             String imgUrl = imageHomeBean.getImgUrl();
             if (imgUrl.contains("party")) {
                 String[] parties = imgUrl.split("party");
@@ -242,6 +270,7 @@ public class MobileController {
 
                     boolean b = FileUtils.deleteDirectory(imgPath);
                     if (b) {
+                        mobileService.deleteItemImages(imageHomeBean);
                         mobileService.deleteDetailImagesById(imageHomeBean.getId());
                         return "success";
                     } else {
@@ -267,20 +296,26 @@ public class MobileController {
     private String deleteDetailImage(HttpServletRequest request, HttpServletResponse response) {
 
         String itemJson = request.getParameter("itemJson");
+        String hostUserId = request.getParameter("hostUserId");
+        System.out.println(hostUserId);
         try {
             DetailImages detailImages = new Gson().fromJson(itemJson, DetailImages.class);
             if (null == detailImages)
                 return "error";
-            mobileService.deleteDetailImages(detailImages);
+            if (!hostUserId .equals(detailImages.getUserId())) {
+                return "notYou";
+            }
             String imgUrl = detailImages.getImgUrl();
             if (imgUrl.contains("party")) {
                 String[] parties = imgUrl.split("party");
                 String path = System.getProperty("catalina.home") + parties[1];
                 File file = new File(path);
-                if (file.exists())
+                if (file.exists()) {
                     file.delete();
-                else
+                    mobileService.deleteDetailImages(detailImages);
+                } else {
                     return "notFile";
+                }
             }
 
             return "success";
@@ -439,6 +474,8 @@ public class MobileController {
 
         String userId = request.getParameter("userId");
 
+        String hostUserId = request.getParameter("hostUserId");
+
         String host = request.getParameter("host");
 
         String bannerId = request.getParameter("bannerId");
@@ -451,6 +488,11 @@ public class MobileController {
                 + userId + "/detailImages/" + bannerId + "/";
 
         try {
+
+            if (!userId.equals(hostUserId)){
+             return "notYou";
+            }
+
             File file = new File(imgPath);
 
             if (!file.exists()) {
@@ -836,7 +878,7 @@ public class MobileController {
      * 图片文件复制
      *
      * @param request
-     * @param response
+     * @param request
      * @return
      */
     public String copyFile(HttpServletRequest request, String openId) {
