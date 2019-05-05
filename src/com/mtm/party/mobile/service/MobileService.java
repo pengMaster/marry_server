@@ -359,6 +359,7 @@ public class MobileService {
 					iBean.setCreateTime(objects[2]+"");
 					iBean.setUpdateTime(objects[3]+"");
 					iBean.setUserId(objects[4]+"");
+					iBean.setAppName(objects[5]+"");
 					iBean.setImgUrl(objects[1]+"");
 
 					list.add(iBean);

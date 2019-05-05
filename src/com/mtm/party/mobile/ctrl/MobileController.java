@@ -255,7 +255,7 @@ public class MobileController {
             ImageHomeBean imageHomeBean = new Gson().fromJson(itemJson, ImageHomeBean.class);
             if (null == imageHomeBean)
                 return "error";
-            if (!hostUserId .equals(imageHomeBean.getUserId())) {
+            if (!hostUserId.equals(imageHomeBean.getUserId())) {
                 return "notYou";
             }
             String imgUrl = imageHomeBean.getImgUrl();
@@ -265,17 +265,13 @@ public class MobileController {
                 File file = new File(path);
                 if (file.exists()) {
                     file.delete();
+                    mobileService.deleteItemImages(imageHomeBean);
                     String imgPath = System.getProperty("catalina.home") + "/userImg/"
                             + imageHomeBean.getUserId() + "/detailImages/" + imageHomeBean.getId() + "/";
 
                     boolean b = FileUtils.deleteDirectory(imgPath);
-                    if (b) {
-                        mobileService.deleteItemImages(imageHomeBean);
-                        mobileService.deleteDetailImagesById(imageHomeBean.getId());
-                        return "success";
-                    } else {
-                        return "notFile";
-                    }
+                    mobileService.deleteDetailImagesById(imageHomeBean.getId());
+                    return "success";
                 } else
                     return "notFile";
             }
@@ -302,7 +298,7 @@ public class MobileController {
             DetailImages detailImages = new Gson().fromJson(itemJson, DetailImages.class);
             if (null == detailImages)
                 return "error";
-            if (!hostUserId .equals(detailImages.getUserId())) {
+            if (!hostUserId.equals(detailImages.getUserId())) {
                 return "notYou";
             }
             String imgUrl = detailImages.getImgUrl();
@@ -364,6 +360,8 @@ public class MobileController {
 
         String host = request.getParameter("host");
 
+        String appName = request.getParameter("appName");
+
         String id = request.getParameter("id");
 
         String imgPath = System.getProperty("catalina.home") + "/userImg/"
@@ -391,6 +389,7 @@ public class MobileController {
                 detailImages2.setImgUrl(host + "/userImg/" + userId + "/logo/"
                         + multipartFile.getOriginalFilename());
                 detailImages2.setUserId(detailImages2.getUserId());
+                detailImages2.setAppName(appName);
                 detailImages2.setUpdateTime(df.format(new Date()));
                 mobileService.update(detailImages2);
             } else {
@@ -400,7 +399,7 @@ public class MobileController {
                         + multipartFile.getOriginalFilename());
                 detaImages.setUserId(userId);
                 detaImages.setCreateTime(df.format(new Date()));
-
+                detaImages.setAppName(appName);
                 mobileService.save(detaImages);
             }
 
@@ -489,8 +488,8 @@ public class MobileController {
 
         try {
 
-            if (!userId.equals(hostUserId)){
-             return "notYou";
+            if (!userId.equals(hostUserId)) {
+                return "notYou";
             }
 
             File file = new File(imgPath);
