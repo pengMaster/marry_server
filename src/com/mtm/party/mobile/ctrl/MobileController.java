@@ -668,13 +668,17 @@ public class MobileController {
                                HttpServletResponse response) {
 
         try {
-            String inviteName = new String(request.getParameter("inviteName").getBytes("ISO8859-1"), "UTF-8");
+            String inviteName = request.getParameter("inviteName");
+//            String inviteName = new String(request.getParameter("inviteName").getBytes("ISO8859-1"), "UTF-8");
 
-            String inviteDateOne = new String(request.getParameter("inviteDateOne").getBytes("ISO8859-1"), "UTF-8");
+            String inviteDateOne = request.getParameter("inviteDateOne");
+//            String inviteDateOne = new String(request.getParameter("inviteDateOne").getBytes("ISO8859-1"), "UTF-8");
 
-            String inviteDateTwo = new String(request.getParameter("inviteDateTwo").getBytes("ISO8859-1"), "UTF-8");
+//            String inviteDateTwo = new String(request.getParameter("inviteDateTwo").getBytes("ISO8859-1"), "UTF-8");
+            String inviteDateTwo = request.getParameter("inviteDateTwo");
 
-            String inviteAddress = new String(request.getParameter("inviteAddress").getBytes("ISO8859-1"), "UTF-8");
+//            String inviteAddress = new String(request.getParameter("inviteAddress").getBytes("ISO8859-1"), "UTF-8");
+            String inviteAddress = request.getParameter("inviteAddress");
 
             String inviteLongitude = request.getParameter("inviteLongitude");
 
@@ -757,7 +761,7 @@ public class MobileController {
                 e.printStackTrace();
                 return "保存失败";
             }
-        } catch (UnsupportedEncodingException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return "保存失败";
         }
