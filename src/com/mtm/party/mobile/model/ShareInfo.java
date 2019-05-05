@@ -7,6 +7,16 @@ public class ShareInfo {
 	private String imgUrl;
 	private String createTime;
 	private String updateTime;
+	private String inputTitleName;
+
+	public String getInputTitleName() {
+		return inputTitleName;
+	}
+
+	public void setInputTitleName(String inputTitleName) {
+		this.inputTitleName = inputTitleName;
+	}
+
 	public String getId() {
 		return id;
 	}

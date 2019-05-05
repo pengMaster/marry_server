@@ -69,6 +69,7 @@ public class MobileController {
     private final String COPY_FILE = "COPY_FILE";// COPY_FILE
     private final String GET_HOME_IMAGES = "GET_HOME_IMAGES";// GET_HOME_IMAGES
     private final String SAVE_MAP_INFO = "SAVE_MAP_INFO";// 保存地图页信息
+    private final String SAVE_MAP_IMAGE = "SAVE_MAP_IMAGE";// 保存地图页图片
     private final String GET_MAP_INFO = "GET_MAP_INFO";// GET_MAP_INFO
     private final String SAVE_SHARE_INFO = "SAVE_SHARE_INFO";// SAVE_SHARE_INFO
     private final String GET_SHARE_INFO = "GET_SHARE_INFO";// GET_SHARE_INFO
@@ -168,6 +169,9 @@ public class MobileController {
                 json = copyFile(request, response);
             } else if (GET_HOME_IMAGES.equals(method)) {
                 json = getHomeImages(request, response);
+            } else if (SAVE_MAP_IMAGE.equals(method)) {
+                // 保存地图页信息
+                json = saveMapImage(request, response);
             } else if (SAVE_MAP_INFO.equals(method)) {
                 // 保存地图页信息
                 json = saveMapInfo(request, response);
@@ -333,7 +337,7 @@ public class MobileController {
 
         String userId = request.getParameter("userId");
 
-        if (null != userId) {
+        if (null != userId && !"null".equals(userId) ) {
 
             List<UserLogo> detailImages = mobileService.getUserLogoByUserId(userId);
 
@@ -389,7 +393,7 @@ public class MobileController {
                 detailImages2.setImgUrl(host + "/userImg/" + userId + "/logo/"
                         + multipartFile.getOriginalFilename());
                 detailImages2.setUserId(detailImages2.getUserId());
-                detailImages2.setAppName(appName);
+                detailImages2.setAppTitleName(appName);
                 detailImages2.setUpdateTime(df.format(new Date()));
                 mobileService.update(detailImages2);
             } else {
@@ -399,7 +403,7 @@ public class MobileController {
                         + multipartFile.getOriginalFilename());
                 detaImages.setUserId(userId);
                 detaImages.setCreateTime(df.format(new Date()));
-                detaImages.setAppName(appName);
+                detaImages.setAppTitleName(appName);
                 mobileService.save(detaImages);
             }
 
@@ -580,6 +584,8 @@ public class MobileController {
                 + userId + "/share/";
 
         try {
+            String inputTitleName = request.getParameter("inputTitleName");
+
             File file = new File(imgPath);
 
             if (!file.exists()) {
@@ -606,10 +612,16 @@ public class MobileController {
                 shareBean.setId(objs[0] + "");
                 shareBean.setCreateTime(objs[3] + "");
                 shareBean.setUpdateTime(df.format(new Date()));
+                if (!"".equals(inputTitleName))
+                    shareBean.setInputTitleName(inputTitleName);
+                else
+                    shareBean.setCreateTime(objs[5] + "");
                 mobileService.update(shareBean);
             } else {
                 shareBean.setId(getId());
                 shareBean.setCreateTime(df.format(new Date()));
+                if (!"".equals(inputTitleName))
+                    shareBean.setInputTitleName(inputTitleName);
                 mobileService.save(shareBean);
             }
 
@@ -655,21 +667,115 @@ public class MobileController {
     private String saveMapInfo(HttpServletRequest request,
                                HttpServletResponse response) {
 
+        try {
+            String inviteName = new String(request.getParameter("inviteName").getBytes("ISO8859-1"), "UTF-8");
+
+            String inviteDateOne = new String(request.getParameter("inviteDateOne").getBytes("ISO8859-1"), "UTF-8");
+
+            String inviteDateTwo = new String(request.getParameter("inviteDateTwo").getBytes("ISO8859-1"), "UTF-8");
+
+            String inviteAddress = new String(request.getParameter("inviteAddress").getBytes("ISO8859-1"), "UTF-8");
+
+            String inviteLongitude = request.getParameter("inviteLongitude");
+
+            String inviteLatitude = request.getParameter("inviteLatitude");
+
+            String userId = request.getParameter("userId");
+
+            String isOriginal = request.getParameter("isOriginal");
+
+            try {
+                MapInfo hostUser = new MapInfo();
+                SimpleDateFormat df = new SimpleDateFormat("yyyy年MM月dd日 HH点mm分");
+                List hostObj = (List) mobileService.getMapInfoByOpenId(userId);
+
+                if (null != hostObj) {
+                    Object[] objs = (Object[]) hostObj.get(0);
+                    hostUser.setId(objs[0] + "");
+                    hostUser.setUpdateTime(df.format(new Date()));
+
+                    if (null != userId && !"".equals(userId))
+                        hostUser.setUserId(userId);
+                    else
+                        hostUser.setUserId(objs[1] + "");
+
+                    if (!"".equals(inviteName))
+                        hostUser.setInviteName(inviteName);
+                    else
+                        hostUser.setInviteName(objs[5] + "");
+
+                    if (!"".equals(inviteAddress))
+                        hostUser.setInviteAddress(inviteAddress);
+                    else
+                        hostUser.setInviteAddress(objs[8] + "");
+
+                    if ( !"".equals(inviteDateOne))
+                        hostUser.setInviteDateOne(inviteDateOne);
+                    else
+                        hostUser.setInviteDateOne(objs[6] + "");
+
+                    if (!"".equals(inviteDateTwo))
+                        hostUser.setInviteDateTwo(inviteDateTwo);
+                    else
+                        hostUser.setInviteDateTwo(objs[7] + "");
+
+                    if (null != inviteLatitude && !"".equals(inviteLatitude))
+                        hostUser.setInviteLatitude(inviteLatitude);
+                    else
+                        hostUser.setInviteLatitude(objs[10] + "");
+
+                    if (null != inviteLongitude && !"".equals(inviteLongitude))
+                        hostUser.setInviteLongitude(inviteLongitude);
+                    else
+                        hostUser.setInviteLongitude(objs[9] + "");
+
+                    if (null != isOriginal && !"".equals(isOriginal))
+                        hostUser.setIsOriginal(isOriginal);
+                    else
+                        hostUser.setIsOriginal(objs[4] + "");
+
+                    if (null != objs[11] && !"".equals(objs[11]))
+                        hostUser.setInviteBgUrl(objs[11] + "");
+
+                    mobileService.update(hostUser);
+                } else {
+                    hostUser.setUserId(userId);
+                    hostUser.setInviteName(inviteName);
+                    hostUser.setInviteAddress(inviteAddress);
+                    hostUser.setInviteDateOne(inviteDateOne);
+                    hostUser.setInviteDateTwo(inviteDateTwo);
+                    hostUser.setInviteLatitude(inviteLatitude);
+                    hostUser.setInviteLongitude(inviteLongitude);
+                    hostUser.setIsOriginal(isOriginal);
+                    hostUser.setId(getId());
+                    hostUser.setCreateTime(df.format(new Date()));
+                    mobileService.save(hostUser);
+                }
+                return "保存成功";
+
+            } catch (IllegalStateException e) {
+                e.printStackTrace();
+                return "保存失败";
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return "保存失败";
+        }
+    }
+
+    /**
+     * 保存地图页信息
+     *
+     * @param request
+     * @param response
+     * @return
+     */
+    private String saveMapImage(HttpServletRequest request,
+                                HttpServletResponse response) {
+
         MultipartHttpServletRequest req = (MultipartHttpServletRequest) request;
 
         MultipartFile multipartFile = req.getFile("file");
-
-        String inviteName = request.getParameter("inviteName");
-
-        String inviteDateOne = request.getParameter("inviteDateOne");
-
-        String inviteDateTwo = request.getParameter("inviteDateTwo");
-
-        String inviteAddress = request.getParameter("inviteAddress");
-
-        String inviteLongitude = request.getParameter("inviteLongitude");
-
-        String inviteLatitude = request.getParameter("inviteLatitude");
 
         String userId = request.getParameter("userId");
 
@@ -692,37 +798,59 @@ public class MobileController {
                     .getOriginalFilename());
 
             MapInfo hostUser = new MapInfo();
-
+            SimpleDateFormat df = new SimpleDateFormat("yyyy年MM月dd日 HH点mm分");
             List hostObj = (List) mobileService.getMapInfoByOpenId(userId);
 
-            hostUser.setUserId(userId);
-            hostUser.setInviteName(inviteName);
-            hostUser.setInviteAddress(inviteAddress);
-            hostUser.setInviteDateOne(inviteDateOne);
-            hostUser.setInviteDateTwo(inviteDateTwo);
-            hostUser.setInviteLatitude(inviteLatitude);
-            hostUser.setInviteLongitude(inviteLongitude);
-
-            SimpleDateFormat df = new SimpleDateFormat("yyyy年MM月dd日 HH点mm分");
-
-            hostUser.setIsOriginal(isOriginal);
-            hostUser.setInviteBgUrl(host + "/userImg/" + userId + "/map/"
-                    + multipartFile.getOriginalFilename());
 
             if (null != hostObj) {
                 Object[] objs = (Object[]) hostObj.get(0);
                 hostUser.setId(objs[0] + "");
                 hostUser.setUpdateTime(df.format(new Date()));
+                if (null != objs[1] && !"".equals(objs[1]))
+                    hostUser.setUserId(objs[1] + "");
+                else
+                    hostUser.setUserId(userId);
+                if (null != objs[5] && !"".equals(objs[5]))
+                    hostUser.setInviteName(objs[5] + "");
+
+                if (null != objs[8] && !"".equals(objs[8]))
+                    hostUser.setInviteAddress(objs[8] + "");
+
+                if (null != objs[6] && !"".equals(objs[6]))
+                    hostUser.setInviteDateOne(objs[6] + "");
+
+                if (null != objs[7] && !"".equals(objs[7]))
+                    hostUser.setInviteDateTwo(objs[7] + "");
+
+                if (null != objs[10] && !"".equals(objs[10]))
+                    hostUser.setInviteLatitude(objs[10] + "");
+
+                if (null != objs[9] && !"".equals(objs[9]))
+                    hostUser.setInviteLongitude(objs[9] + "");
+
+                if (null != objs[4] && !"".equals(objs[4]))
+                    hostUser.setIsOriginal(objs[4] + "");
+                else
+                    hostUser.setIsOriginal(isOriginal);
+
+                if (null != multipartFile.getOriginalFilename())
+                    hostUser.setInviteBgUrl(host + "/userImg/" + userId + "/map/"
+                            + multipartFile.getOriginalFilename());
                 mobileService.update(hostUser);
             } else {
+                hostUser.setUserId(userId);
+                hostUser.setIsOriginal(isOriginal);
+                hostUser.setInviteBgUrl(host + "/userImg/" + userId + "/map/"
+                        + multipartFile.getOriginalFilename());
                 hostUser.setId(getId());
                 hostUser.setCreateTime(df.format(new Date()));
                 mobileService.save(hostUser);
             }
 
-            multipartFile.transferTo(fileImg);
-
-            copyFile(request, userId);
+            if (null != multipartFile.getOriginalFilename()) {
+                multipartFile.transferTo(fileImg);
+                copyFile(request, userId);
+            }
 
             return "保存成功";
 

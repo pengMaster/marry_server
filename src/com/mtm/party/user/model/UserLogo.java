@@ -6,15 +6,15 @@ public class UserLogo {
 	private String imgUrl;
 	private String userId;
 	private String createTime;
-	private String appName;
+	private String appTitleName;
 	private String updateTime;
 
-	public String getAppName() {
-		return appName;
+	public String getAppTitleName() {
+		return appTitleName;
 	}
 
-	public void setAppName(String appName) {
-		this.appName = appName;
+	public void setAppTitleName(String appTitleName) {
+		this.appTitleName = appTitleName;
 	}
 
 	public String getId() {
