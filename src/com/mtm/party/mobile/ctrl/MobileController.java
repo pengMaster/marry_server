@@ -477,8 +477,6 @@ public class MobileController {
 
         String userId = request.getParameter("userId");
 
-        String hostUserId = request.getParameter("hostUserId");
-
         String host = request.getParameter("host");
 
         String bannerId = request.getParameter("bannerId");
@@ -491,6 +489,8 @@ public class MobileController {
                 + userId + "/detailImages/" + bannerId + "/";
 
         try {
+
+            String hostUserId = mobileService.getHostUserIdByBannerId(bannerId);
 
             if (!userId.equals(hostUserId)) {
                 return "notYou";

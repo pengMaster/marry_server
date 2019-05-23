@@ -370,6 +370,23 @@ public class MobileService {
 			return null;
 		}
 	}
+
+	/**
+	 * 根据id获取imgs
+	 * @param id
+	 * @return
+	 */
+	public String getHostUserIdByBannerId(String bannnerId){
+		QlBuilder ql=new QlBuilder();
+		ql.segment(" select c.* FROM T_DETAIL_IMAGES c where c.banner_id=").value(bannnerId);
+		List obj = dao.listBySql(ql);
+		if (null !=obj && obj.size()>0) {
+			Object[] objects = (Object[])obj.get(0);
+			return objects[4].toString();
+		}else{
+			return null;
+		}
+	}
 	/**
 	 * 根据bannerId获取imgs
 	 * @param bannerId
