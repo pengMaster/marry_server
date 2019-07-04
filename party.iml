@@ -343,15 +343,6 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="iReport.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/WebRoot/WEB-INF/lib/iReport.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
       <library name="itext-2.0.6.jar">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/WebRoot/WEB-INF/lib/itext-2.0.6.jar!/" />
