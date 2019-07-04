@@ -25,4 +25,12 @@ public class StringUtils {
 		return refId;
 	}
 
+	public static boolean hasText(String text){
+		if (null == text || "".equals(text)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
 }

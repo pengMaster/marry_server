@@ -35,6 +35,16 @@
 		<url-pattern>/</url-pattern>
 	</servlet-mapping>
 
+	<!-- 允许跨域访问 -->
+	<filter>
+		<filter-name>webContextFilter</filter-name>
+		<filter-class>com.mtm.party.mobile.util.WebContextFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>webContextFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
 	<filter>
 		<filter-name>CharacterEncodingFilter</filter-name>
 		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>

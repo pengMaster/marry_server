@@ -22,5 +22,8 @@
 		<property name="userId">
 			<column name="user_id" />
 		</property>
+		<property name="appTitleName">
+			<column name="app_title_name" />
+		</property>
 	</class>
 </hibernate-mapping>

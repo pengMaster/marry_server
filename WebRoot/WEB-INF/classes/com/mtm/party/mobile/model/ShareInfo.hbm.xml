@@ -22,5 +22,8 @@
 		<property name="userId" type="string">
 			<column name="user_id" />
 		</property>
+		<property name="inputTitleName" type="string">
+			<column name="input_title_name" />
+		</property>
 	</class>
 </hibernate-mapping>

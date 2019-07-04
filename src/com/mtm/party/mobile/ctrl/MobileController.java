@@ -13,8 +13,10 @@ import java.util.List;
 import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
+import com.mtm.party.mobile.util.MutableHttpServletRequest;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -125,7 +127,6 @@ public class MobileController {
     public String mobileIn(HttpServletRequest request,
                            HttpServletResponse response) throws Exception {
         response.setContentType("application/json; charset=UTF-8");
-        // request.setCharacterEncoding("application/json; charset=UTF-8");
         HttpHeaderInfoBean headerInfoBean = HttpHeaderUtils
                 .getHeaderInfos(request);
         if (ValidUtil.isEmpty(headerInfoBean.getMethod())) {
@@ -337,7 +338,7 @@ public class MobileController {
 
         String userId = request.getParameter("userId");
 
-        if (null != userId && !"null".equals(userId) ) {
+        if (null != userId && !"null".equals(userId)) {
 
             List<UserLogo> detailImages = mobileService.getUserLogoByUserId(userId);
 
@@ -458,6 +459,7 @@ public class MobileController {
         List<DetailImages> detailImages = mobileService
                 .getDetailImagesByBannerId(bannerId);
 
+        System.out.println(new Gson().toJson(detailImages));
         return new Gson().toJson(detailImages);
     }
 
@@ -490,7 +492,7 @@ public class MobileController {
 
         try {
 
-            String hostUserId = mobileService.getHostUserIdByBannerId(bannerId);
+            String hostUserId = mobileService.getHostUserIdByImageBannerId(bannerId);
 
             if (!userId.equals(hostUserId)) {
                 return "notYou";
@@ -713,7 +715,7 @@ public class MobileController {
                     else
                         hostUser.setInviteAddress(objs[8] + "");
 
-                    if ( !"".equals(inviteDateOne))
+                    if (!"".equals(inviteDateOne))
                         hostUser.setInviteDateOne(inviteDateOne);
                     else
                         hostUser.setInviteDateOne(objs[6] + "");
