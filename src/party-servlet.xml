@@ -22,6 +22,7 @@
 
 	<context:component-scan base-package="cn.mtm2000.common" />
 	<context:component-scan base-package="com.mtm.party" />
+
 	
 	<mvc:annotation-driven/> 
 	<!-- task任务扫描注解 -->  
@@ -56,7 +57,7 @@
 			<value>com.mysql.jdbc.Driver</value>
 		</property>
 		<property name="jdbcUrl">
-			<value>jdbc:mysql://47.104.198.222:3306/marry</value>
+			<value>jdbc:mysql://47.104.198.222:3306/marry?createDatabaseIfNotExist=true&amp;useUnicode=true&amp;characterEncoding=UTF-8</value>
 		</property>
 		<property name="minPoolSize">
 			<value>1</value>
@@ -96,7 +97,7 @@
 	<bean id="pretrialDataSource" parent="parentDataSource">
 		<property name="user" value="root" />
 		<!--之前方便大家测试  带着密码  结果被人恶意删库 只好隐藏掉l-->
-		<property name="password" value="*******" />
+		<property name="password" value="********" />
 	</bean>
 
 	<bean id="dataSource" class="cn.mtm2000.common.hibernate.DynamicDataSource">

@@ -22,6 +22,7 @@
 </div>
 
 #### 项目说明
+ - spring boot + mybatis重构版本：https://github.com/HowToRun/marry-restructure
  - 项目架构：SpringMvc
  - 环境：MyEclipse 8.5 + Jdk 1.6 或者 Idea + Jdk 1.8
  - 服务器：阿里云服务

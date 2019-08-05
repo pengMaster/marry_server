@@ -20,6 +20,7 @@ import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.mtm.party.mobile.model.CloudUserBean;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -40,7 +41,7 @@ import com.mtm.party.user.service.UserService;
  * 中文参数接收方式:URLDecoder.decode(request.getParameter("body"), "UTF-8");
  *
  * 幻想西游自动刷怪脚本
- * 
+ *
  * 后台管理对接
  */
 
@@ -94,6 +95,102 @@ public class PartyAction {
 		return "statistic/statisticIndex";
 	}
 
+	// http://localhost:8080/party//cloud
+	@RequestMapping(value = "/cloud", method = RequestMethod.GET)
+	public String cloud(HttpServletRequest request, HttpServletResponse response) {
+		String path=System.getProperty("catalina.home");
+		String cloudUserPath = path + "/cloudUser";
+
+		File file = new File(cloudUserPath);
+		List<CloudUserBean> listDirs = new ArrayList();
+		if (file.exists()) {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			File[] files = file.listFiles();
+			for (int i = 0; i < files.length; i++) {
+				// 如果还是文件夹 递归获取里面的文件 文件夹
+				if (files[i].isDirectory()) {
+					CloudUserBean bean = new CloudUserBean();
+					bean.setName(files[i].getName());
+					bean.setPath(files[i].getPath());
+					bean.setTime(sdf.format(System.currentTimeMillis()));
+					bean.setSize(files[i].length()+"");
+					bean.setId(System.currentTimeMillis()+"");
+					bean.setGrade("1");
+					listDirs.add(bean);
+				}
+			}
+			request.setAttribute("listDirs", listDirs);
+			System.out.println(listDirs.toString());
+		}
+		return "cloud/cloudUser";
+	}
+	// http://localhost:8080/party//cloud
+	@RequestMapping(value = "/cloud/dirItem", method = RequestMethod.GET)
+	public String dirItem(HttpServletRequest request, HttpServletResponse response) {
+		String path = request.getParameter("path");
+
+		File file = new File(path);
+		List<CloudUserBean> listDirs = new ArrayList();
+		if (file.exists()) {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			File[] files = file.listFiles();
+			for (int i = 0; i < files.length; i++) {
+				// 如果还是文件夹 递归获取里面的文件 文件夹
+				if (files[i].isDirectory()) {
+					CloudUserBean bean = new CloudUserBean();
+					bean.setName(files[i].getName());
+					bean.setPath(files[i].getAbsolutePath());
+					bean.setTime(sdf.format(System.currentTimeMillis()));
+					bean.setSize(files[i].length()+"");
+					bean.setId(System.currentTimeMillis()+"");
+					bean.setGrade("2");
+					listDirs.add(bean);
+				}
+			}
+			request.setAttribute("listDirs", listDirs);
+			System.out.println(listDirs.toString());
+		}
+		return "cloud/cloudUser";
+	}
+	// http://localhost:8080/party//cloud
+	@RequestMapping(value = "/cloud/file", method = RequestMethod.GET)
+	public String cloudFile(HttpServletRequest request, HttpServletResponse response) {
+		String path = request.getParameter("path");
+
+		File file = new File(path);
+		List<CloudUserBean> listDirs = new ArrayList();
+		if (file.exists()) {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			File[] files = file.listFiles();
+			for (int i = 0; i < files.length; i++) {
+				// 如果还是文件夹 递归获取里面的文件 文件夹
+				if (files[i].isFile()) {
+					CloudUserBean bean = new CloudUserBean();
+					bean.setName(files[i].getName());
+					bean.setPath(files[i].getAbsolutePath());
+					bean.setTime(sdf.format(System.currentTimeMillis()));
+					bean.setSize(files[i].length()+"");
+					bean.setId(System.currentTimeMillis()+"");
+					bean.setGrade("3");
+					String absolutePath = files[i].getAbsolutePath();
+					if (absolutePath.contains("cloudUser")) {
+						String[] cloudUsers = absolutePath.split("cloudUser");
+						bean.setChildPath(cloudUsers[1]);
+					}
+					if (files[i].getName().contains("png") || files[i].getName().contains("jpg")) {
+						bean.setType("image");
+					} else if (files[i].getName().contains("mp4") || files[i].getName().contains("3gp")
+							|| files[i].getName().contains("avi")) {
+						bean.setType("video");
+					}
+					listDirs.add(bean);
+				}
+			}
+			request.setAttribute("listFile", listDirs);
+			System.out.println(listDirs.toString());
+		}
+		return "cloud/cloudUserFile";
+	}
 	// http://localhost:8080/party//game.do?cmd=906b3&sid=j74zm84d3acs51e4n355b&attackBossName=【蒸笼鬼】
 	@RequestMapping(value = "/game", method = RequestMethod.GET)
 	public String game(HttpServletRequest request, HttpServletResponse response) {
@@ -487,13 +584,13 @@ public class PartyAction {
 
 	/**
 	 * base64字符串转换成图片
-	 * 
+	 *
 	 * @param imgStr
 	 *            base64字符串
 	 * @param imgFilePath
 	 *            图片存放路径
 	 * @return
-	 * 
+	 *
 	 * @author ZHANGJL
 	 * @dateTime 2018-02-23 14:42:17
 	 */
